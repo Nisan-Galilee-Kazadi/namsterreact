@@ -67,7 +67,11 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [editForm, setEditForm] = useState({ firstName: "", lastName: "", email: "" });
 
-  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3001';
+  const API_BASE =
+    import.meta.env.VITE_API_BASE ||
+    (import.meta.env.PROD
+      ? 'https://namsterbackend-3.onrender.com'
+      : 'http://localhost:3001');
 
   const fetchDashboardData = async () => {
     try {

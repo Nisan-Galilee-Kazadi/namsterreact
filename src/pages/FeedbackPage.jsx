@@ -17,7 +17,11 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3001';
+const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  (import.meta.env.PROD
+    ? 'https://namsterbackend-3.onrender.com'
+    : 'http://localhost:3001');
 
 const Feedback = () => {
     const { t } = useTranslation();

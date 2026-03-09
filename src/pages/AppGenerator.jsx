@@ -33,7 +33,11 @@ import ThemeToggle from "../components/ThemeToggle";
 import AuthModal from "../components/AuthModal";
 import { useTranslation } from "react-i18next";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3001";
+const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  (import.meta.env.PROD
+    ? "https://namsterbackend-3.onrender.com"
+    : "http://localhost:3001");
 
 function AppGenerator() {
   const { t } = useTranslation();
@@ -353,7 +357,8 @@ function AppGenerator() {
       const { sessionId, namesTotal } = response.data;
       setSessionId(sessionId);
       setNamesTotal(namesTotal);
-      setStatus(t("app.status_session_created", { count: namesTotal }));
+      setStatus(t("app.status_session_created", { count: namesTotal }));
+
     } catch (error) {
       console.error(error);
       setStatus(t("app.status_error_upload"));
@@ -435,7 +440,8 @@ function AppGenerator() {
         ...settings,
       });
       setTestPreviewSrc(response.data.preview);
-      setStatus(t("app.status_test_success"));
+      setStatus(t("app.status_test_success"));
+
 
       // Scroll to result card
       setTimeout(() => {
@@ -489,7 +495,8 @@ function AppGenerator() {
         : `${API_BASE}${rawDownloadUrl}`;
       setDownloadUrl(absoluteDownloadUrl);
       setStatus(t('app.status_gen_done'));
-      setProgress(100);
+      setProgress(100);
+
 
       // Enregistrer l'historique
       if (user && token) {
@@ -542,7 +549,8 @@ function AppGenerator() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         title="Continuer l'aventure ?"
-      />
+      />
+
 
       
       <AnimatePresence>
@@ -1185,3 +1193,4 @@ function AppGenerator() {
 }
 
 export default AppGenerator;
+

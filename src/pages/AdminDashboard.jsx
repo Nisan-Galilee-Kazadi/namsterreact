@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users,
@@ -39,7 +39,11 @@ import SideMenu from '../components/SideMenu';
 import { useAuth } from '../context/AuthContext';
 import Swal from 'sweetalert2';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3001';
+const API_BASE =
+    import.meta.env.VITE_API_BASE ||
+    (import.meta.env.PROD
+        ? 'https://namsterbackend-3.onrender.com'
+        : 'http://localhost:3001');
 
 // Custom SweetAlert configuration following design system
 const swalConfig = {
@@ -124,8 +128,8 @@ const AdminDashboard = () => {
             Swal.fire({
                 ...swalConfig,
                 icon: 'success',
-                title: 'Réponse envoyée',
-                text: 'Votre réponse a été envoyée avec succès.',
+                title: 'RÃ©ponse envoyÃ©e',
+                text: 'Votre rÃ©ponse a Ã©tÃ© envoyÃ©e avec succÃ¨s.',
                 timer: 2000,
                 showConfirmButton: false
             });
@@ -135,7 +139,7 @@ const AdminDashboard = () => {
                 ...swalConfig,
                 icon: 'error',
                 title: 'Erreur',
-                text: 'Impossible d\'envoyer la réponse.',
+                text: 'Impossible d\'envoyer la rÃ©ponse.',
             });
         } finally {
             setSendingReply(false);
@@ -172,8 +176,8 @@ const AdminDashboard = () => {
     const handleDeleteUser = async (userId) => {
         const result = await Swal.fire({
             ...swalConfig,
-            title: 'Êtes-vous sûr ?',
-            text: "Cette action est irréversible !",
+            title: 'ÃŠtes-vous sÃ»r ?',
+            text: "Cette action est irrÃ©versible !",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Oui, supprimer !',
@@ -191,8 +195,8 @@ const AdminDashboard = () => {
                 Swal.fire({
                     ...swalConfig,
                     icon: 'success',
-                    title: 'Supprimé !',
-                    text: 'L\'utilisateur a été supprimé.',
+                    title: 'SupprimÃ© !',
+                    text: 'L\'utilisateur a Ã©tÃ© supprimÃ©.',
                     timer: 2000,
                     showConfirmButton: false
                 });
@@ -232,8 +236,8 @@ const AdminDashboard = () => {
                 Swal.fire({
                     ...swalConfig,
                     icon: 'success',
-                    title: 'Succès !',
-                    text: `Le statut Premium a été ${newStatus ? 'ajouté' : 'retiré'} avec succès.`,
+                    title: 'SuccÃ¨s !',
+                    text: `Le statut Premium a Ã©tÃ© ${newStatus ? 'ajoutÃ©' : 'retirÃ©'} avec succÃ¨s.`,
                     timer: 2000,
                     showConfirmButton: false
                 });
@@ -274,8 +278,8 @@ const AdminDashboard = () => {
             Swal.fire({
                 ...swalConfig,
                 icon: 'success',
-                title: 'Mis à jour !',
-                text: 'Les informations de l\'utilisateur ont été mises à jour.',
+                title: 'Mis Ã  jour !',
+                text: 'Les informations de l\'utilisateur ont Ã©tÃ© mises Ã  jour.',
                 timer: 2000,
                 showConfirmButton: false
             });
@@ -285,7 +289,7 @@ const AdminDashboard = () => {
                 ...swalConfig,
                 icon: 'error',
                 title: 'Erreur',
-                text: 'Impossible de mettre à jour l\'utilisateur.'
+                text: 'Impossible de mettre Ã  jour l\'utilisateur.'
             });
         } finally {
             setIsSubmittingEdit(false);
@@ -320,12 +324,12 @@ const AdminDashboard = () => {
                     >
                         <div className="flex items-center gap-2 px-3 py-1 bg-gray-900 text-white rounded-full w-fit mb-3 border border-gray-900/10 shadow-lg shadow-gray-900/10">
                             <ShieldAlert className="w-3.5 h-3.5 text-primary" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Zone Administrateur • Live</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest">Zone Administrateur â€¢ Live</span>
                         </div>
                         <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3 leading-tight">
                             Console de Gestion
                         </h1>
-                        <p className="text-gray-500 dark:text-gray-400 font-medium mt-1">Gérez votre plateforme et répondez aux utilisateurs.</p>
+                        <p className="text-gray-500 dark:text-gray-400 font-medium mt-1">GÃ©rez votre plateforme et rÃ©pondez aux utilisateurs.</p>
                     </motion.div>
 
                     <div className="flex items-center gap-3 w-full lg:w-auto">
@@ -371,9 +375,9 @@ const AdminDashboard = () => {
                                 <div>
                                     <h3 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
                                         <Users className="w-6 h-6 text-primary" />
-                                        Utilisateurs Enregistrés
+                                        Utilisateurs EnregistrÃ©s
                                     </h3>
-                                    <p className="text-sm text-gray-400 dark:text-gray-500 font-medium">Liste complète des membres de Namster</p>
+                                    <p className="text-sm text-gray-400 dark:text-gray-500 font-medium">Liste complÃ¨te des membres de Namster</p>
                                 </div>
                                 <div className="flex gap-2 w-full sm:w-auto">
                                     <div className="relative flex-1 sm:flex-none">
@@ -395,8 +399,8 @@ const AdminDashboard = () => {
                                     <thead>
                                         <tr className="bg-[#FBFCFD] dark:bg-white/5 text-gray-400 dark:text-gray-500 text-[10px] font-black uppercase tracking-widest border-b border-gray-50 dark:border-white/10">
                                             <th className="px-8 py-5">Utilisateur</th>
-                                            <th className="px-8 py-5">Status / Rôle</th>
-                                            <th className="px-8 py-5">Activité</th>
+                                            <th className="px-8 py-5">Status / RÃ´le</th>
+                                            <th className="px-8 py-5">ActivitÃ©</th>
                                             <th className="px-8 py-5">Action</th>
                                         </tr>
                                     </thead>
@@ -437,7 +441,7 @@ const AdminDashboard = () => {
                                                         <button
                                                             onClick={() => setViewingUser(u)}
                                                             className="p-2.5 bg-green-50 text-green-500 rounded-xl hover:bg-green-500 hover:text-white transition-all"
-                                                            title="Voir détails"
+                                                            title="Voir dÃ©tails"
                                                         >
                                                             <Eye className="w-4 h-4" />
                                                         </button>
@@ -453,7 +457,7 @@ const AdminDashboard = () => {
                                                         <button
                                                             onClick={() => openEditModal(u)}
                                                             className="p-2.5 bg-blue-50 text-blue-500 rounded-xl hover:bg-blue-500 hover:text-white transition-all"
-                                                            title="Éditer l'utilisateur"
+                                                            title="Ã‰diter l'utilisateur"
                                                         >
                                                             <Pencil className="w-4 h-4" />
                                                         </button>
@@ -482,7 +486,7 @@ const AdminDashboard = () => {
                                         <MessageSquare className="w-6 h-6 text-orange-500" />
                                         Feedbacks Clients
                                     </h3>
-                                    <p className="text-sm text-gray-400 dark:text-gray-500 font-medium tracking-tight">Répondez aux demandes des utilisateurs</p>
+                                    <p className="text-sm text-gray-400 dark:text-gray-500 font-medium tracking-tight">RÃ©pondez aux demandes des utilisateurs</p>
                                 </div>
 
                                 <div className="divide-y divide-gray-50 dark:divide-white/5 p-4 max-h-[600px] overflow-y-auto">
@@ -499,7 +503,7 @@ const AdminDashboard = () => {
                                                     </div>
                                                 </div>
                                                 <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${fb.status === 'replied' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'}`}>
-                                                    {fb.status === 'replied' ? 'Déjà répondu' : 'Prioritaire'}
+                                                    {fb.status === 'replied' ? 'DÃ©jÃ  rÃ©pondu' : 'Prioritaire'}
                                                 </span>
                                             </div>
                                             <div className="bg-white dark:bg-white/5 p-4 rounded-2xl border border-gray-100 dark:border-white/5 shadow-xs mb-4">
@@ -509,7 +513,7 @@ const AdminDashboard = () => {
                                             {fb.status === 'replied' ? (
                                                 <div className="pl-6 border-l-2 border-primary/20 space-y-2 text-gray-900 dark:text-white">
                                                     <p className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                                                        <Reply className="w-3 h-3" /> Votre réponse :
+                                                        <Reply className="w-3 h-3" /> Votre rÃ©ponse :
                                                     </p>
                                                     <p className="text-xs font-bold text-gray-500 dark:text-gray-400 bg-primary/5 dark:bg-primary/10 p-3 rounded-xl">{fb.response}</p>
                                                 </div>
@@ -518,7 +522,7 @@ const AdminDashboard = () => {
                                                     onClick={() => setReplyingTo(fb)}
                                                     className="w-full py-3 bg-primary text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
                                                 >
-                                                    <Reply className="w-4 h-4 text-white" /> Répondre maintenant
+                                                    <Reply className="w-4 h-4 text-white" /> RÃ©pondre maintenant
                                                 </button>
                                             )}
                                         </div>
@@ -608,19 +612,19 @@ const AdminDashboard = () => {
                                     </button>
                                 </div>
 
-                                <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Répondre à {replyingTo.name}</h3>
+                                <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-2">RÃ©pondre Ã  {replyingTo.name}</h3>
                                 <div className="bg-gray-50 dark:bg-white/5 p-6 rounded-2xl border border-gray-100 dark:border-white/5 mb-8 italic text-sm text-gray-500 dark:text-gray-400 font-medium">
                                     "{replyingTo.message}"
                                 </div>
 
                                 <form onSubmit={handleReply} className="space-y-6">
                                     <div>
-                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1 mb-2 block">Votre réponse officielle</label>
+                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1 mb-2 block">Votre rÃ©ponse officielle</label>
                                         <textarea
                                             value={replyText}
                                             onChange={(e) => setReplyText(e.target.value)}
                                             className="w-full h-40 bg-gray-50 dark:bg-white/5 border-none rounded-3xl p-6 outline-hidden focus:ring-2 focus:ring-primary/20 text-sm font-bold resize-none text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600"
-                                            placeholder="Écrivez votre message ici..."
+                                            placeholder="Ã‰crivez votre message ici..."
                                             required
                                         />
                                     </div>
@@ -629,7 +633,7 @@ const AdminDashboard = () => {
                                         disabled={sendingReply || !replyText}
                                         className="w-full py-5 bg-primary text-white rounded-2xl font-black flex items-center justify-center gap-3 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
                                     >
-                                        {sendingReply ? 'Envoi...' : 'Envoyer la réponse'}
+                                        {sendingReply ? 'Envoi...' : 'Envoyer la rÃ©ponse'}
                                         <Send className="w-5 h-5" />
                                     </button>
                                 </form>
@@ -670,13 +674,13 @@ const AdminDashboard = () => {
                                 <form onSubmit={handleUpdateUser} className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1 mb-2 block">Prénom</label>
+                                            <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1 mb-2 block">PrÃ©nom</label>
                                             <input
                                                 type="text"
                                                 value={editForm.firstName}
                                                 onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
                                                 className="w-full bg-gray-50 dark:bg-white/5 border-none rounded-xl p-4 outline-hidden focus:ring-2 focus:ring-blue-500/20 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600"
-                                                placeholder="Prénom"
+                                                placeholder="PrÃ©nom"
                                                 required
                                             />
                                         </div>
@@ -706,7 +710,7 @@ const AdminDashboard = () => {
                                     </div>
 
                                     <div>
-                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1 mb-2 block">Rôle</label>
+                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1 mb-2 block">RÃ´le</label>
                                         <select
                                             value={editForm.role}
                                             onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
@@ -757,7 +761,7 @@ const AdminDashboard = () => {
                                     </button>
                                 </div>
 
-                                <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-6">Détails de l'utilisateur</h3>
+                                <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-6">DÃ©tails de l'utilisateur</h3>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                                     <div className="space-y-2">
@@ -769,7 +773,7 @@ const AdminDashboard = () => {
                                         <p className="text-sm font-bold text-gray-900 dark:text-white">{viewingUser.email}</p>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Rôle</label>
+                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">RÃ´le</label>
                                         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${viewingUser.role === 'admin' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400'}`}>
                                             {viewingUser.role === 'admin' ? 'Administrateur' : 'Utilisateur'}
                                         </span>
@@ -785,7 +789,7 @@ const AdminDashboard = () => {
                                         <p className="text-sm font-bold text-gray-900 dark:text-white">{new Date(viewingUser.createdAt).toLocaleDateString()}</p>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Dernière activité</label>
+                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">DerniÃ¨re activitÃ©</label>
                                         <p className="text-sm font-bold text-gray-900 dark:text-white">{new Date(viewingUser.updatedAt).toLocaleDateString()}</p>
                                     </div>
                                 </div>
@@ -793,7 +797,7 @@ const AdminDashboard = () => {
                                 <div className="border-t border-gray-100 dark:border-white/10 pt-6">
                                     <h4 className="text-lg font-black text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                                         <Activity className="w-5 h-5 text-primary" />
-                                        Statistiques d'activité
+                                        Statistiques d'activitÃ©
                                     </h4>
                                     <div className="grid grid-cols-3 gap-4">
                                         <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-2xl text-center">
@@ -819,7 +823,7 @@ const AdminDashboard = () => {
                                             <p className="text-2xl font-black text-orange-600 dark:text-orange-400">
                                                 {viewingUser.history?.filter(h => h.action === "generation" || h.action === "generate").length || 0}
                                             </p>
-                                            <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest mt-1">Opérations</p>
+                                            <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest mt-1">OpÃ©rations</p>
                                         </div>
                                         <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-2xl text-center">
                                             <p className="text-2xl font-black text-green-600 dark:text-green-400">
@@ -838,7 +842,7 @@ const AdminDashboard = () => {
                                                     return Math.round(totalItems * 5 / 60);
                                                 })()}h
                                             </p>
-                                            <p className="text-[10px] font-black text-green-400 uppercase tracking-widest mt-1">Temps économisé</p>
+                                            <p className="text-[10px] font-black text-green-400 uppercase tracking-widest mt-1">Temps Ã©conomisÃ©</p>
                                         </div>
                                     </div>
                                 </div>
@@ -847,7 +851,7 @@ const AdminDashboard = () => {
                                     <div className="border-t border-gray-100 dark:border-white/10 pt-6 mt-6">
                                         <h4 className="text-lg font-black text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                                             <Clock className="w-5 h-5 text-primary" />
-                                            Historique récent
+                                            Historique rÃ©cent
                                         </h4>
                                         <div className="space-y-3 max-h-60 overflow-y-auto">
                                             {viewingUser.history.slice(-5).reverse().map((h, i) => (
@@ -857,7 +861,7 @@ const AdminDashboard = () => {
                                                     </div>
                                                     <div className="flex-1">
                                                         <p className="text-xs font-black text-gray-900 dark:text-white">{h.details}</p>
-                                                        <p className="text-[9px] text-gray-400 dark:text-gray-500 font-bold uppercase">{new Date(h.timestamp).toLocaleDateString()} • {new Date(h.timestamp).toLocaleTimeString()}</p>
+                                                        <p className="text-[9px] text-gray-400 dark:text-gray-500 font-bold uppercase">{new Date(h.timestamp).toLocaleDateString()} â€¢ {new Date(h.timestamp).toLocaleTimeString()}</p>
                                                     </div>
                                                 </div>
                                             ))}
@@ -874,6 +878,7 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+
 
 
 
