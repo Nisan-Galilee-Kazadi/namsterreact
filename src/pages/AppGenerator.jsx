@@ -111,6 +111,7 @@ function AppGenerator() {
   const [dontShowTourAgain, setDontShowTourAgain] = useState(false);
   const [highlightRect, setHighlightRect] = useState(null);
   const [statusPulse, setStatusPulse] = useState(false);
+  const [mobilePanel, setMobilePanel] = useState("import");
 
   const TOUR_STORAGE_KEY = "namster_hide_tutorial";
 
@@ -526,6 +527,16 @@ function AppGenerator() {
 
   const currentTourStep = tourSteps[tourStep];
   const isTourLastStep = tourStep === tourSteps.length - 1;
+  const canUpload = !isLoading && !!modelFile && !!listFile;
+  const canTest = !isLoading && !!sessionId && !!coordsName;
+  const canGenerate = !isLoading && !!sessionId && !!coordsName && !!testPreviewSrc;
+  const mobileStepLabel = !sessionId
+    ? "Import"
+    : !coordsName
+      ? "Placement"
+      : !testPreviewSrc
+        ? "Test"
+        : "Generation";
   const tooltipWidth = 360;
   const tooltipHeight = 220;
   const tooltipStyle = highlightRect
@@ -632,8 +643,200 @@ function AppGenerator() {
           </>
         )}
       </AnimatePresence>
+      <div className="lg:hidden sticky top-0 z-[115] border-b border-gray-100/80 dark:border-white/10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md">
+        <div className="px-3 pt-2 pb-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <a href="/" className="flex items-center gap-2">
+                <img src="/images/logo.png" className="w-8 h-8 rounded-lg" alt="Namster" />
+                <span className="text-sm font-black bg-clip-text text-transparent bg-linear-to-r from-primary to-accent">
+                  Namster
+                </span>
+              </a>
+              <span className="text-[10px] px-2 py-1 rounded-full bg-primary/10 text-primary font-black uppercase tracking-wider">
+                {mobileStepLabel}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={openTour}
+                className="p-2 rounded-lg text-gray-500 dark:text-gray-300 bg-gray-100 dark:bg-white/10"
+                title="Guide"
+              >
+                <HelpCircle className="w-4 h-4" />
+              </button>
+              <ThemeToggle />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 gap-1 p-1 rounded-2xl bg-gray-100/70 dark:bg-white/5 border border-gray-100 dark:border-white/10">
+            {[
+              { key: "import", label: "Import" },
+              { key: "mode", label: "Mode" },
+              { key: "run", label: "Run" },
+              { key: "style", label: "Style" },
+            ].map((item) => (
+              <button
+                key={item.key}
+                onClick={() => setMobilePanel(item.key)}
+                className={`py-2 rounded-xl text-[11px] font-black uppercase tracking-wide transition-all ${mobilePanel === item.key
+                  ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
+                  : "text-gray-500 dark:text-gray-300"
+                  }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="rounded-2xl border border-gray-100 dark:border-white/10 bg-white/80 dark:bg-slate-950/40 p-3">
+            {mobilePanel === "import" && (
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="file"
+                    id="mobile-model"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => setModelFile(e.target.files[0])}
+                  />
+                  <label htmlFor="mobile-model" className="py-2 px-3 rounded-xl text-xs font-black text-primary bg-primary/10 text-center">
+                    {modelFile ? t("app.model_label") : t("app.upload_model")}
+                  </label>
+                  <input
+                    type="file"
+                    id="mobile-list"
+                    className="hidden"
+                    accept=".csv,.xlsx,.doc,.docx,.pdf"
+                    onChange={(e) => setListFile(e.target.files[0])}
+                  />
+                  <label htmlFor="mobile-list" className="py-2 px-3 rounded-xl text-xs font-black text-accent bg-cyan-500/10 text-center">
+                    {listFile ? "Liste chargee" : t("app.upload_list")}
+                  </label>
+                </div>
+                <button
+                  onClick={handleUpload}
+                  disabled={!canUpload}
+                  className="w-full py-2.5 rounded-xl bg-primary text-white text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {t("app.upload")}
+                </button>
+              </div>
+            )}
+
+            {mobilePanel === "mode" && (
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      setUseTable(false);
+                      setCoordsTable(null);
+                      setSelectionMode("name");
+                    }}
+                    className={`py-2 rounded-xl text-xs font-black ${!useTable ? "bg-primary text-white" : "bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300"}`}
+                  >
+                    Nom
+                  </button>
+                  <button
+                    onClick={() => {
+                      setUseTable(true);
+                      if (!coordsName) setSelectionMode("name");
+                      else if (!coordsTable) setSelectionMode("table");
+                    }}
+                    className={`py-2 rounded-xl text-xs font-black ${useTable ? "bg-accent text-white" : "bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300"}`}
+                  >
+                    Nom + Table
+                  </button>
+                </div>
+                <div className="text-[11px] font-bold text-gray-500 dark:text-gray-300">
+                  N: {coordsName ? `${coordsName.x}, ${coordsName.y}` : "--"} | T: {useTable ? (coordsTable ? `${coordsTable.x}, ${coordsTable.y}` : "--") : "Off"}
+                </div>
+              </div>
+            )}
+
+            {mobilePanel === "run" && (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={handleTest}
+                  disabled={!canTest}
+                  className="py-2 rounded-xl border border-primary text-primary text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Tester
+                </button>
+                <button
+                  onClick={handleGenerate}
+                  disabled={!canGenerate}
+                  className="py-2 rounded-xl bg-primary text-white text-xs font-black disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Generer
+                </button>
+                {downloadUrl && (
+                  <a
+                    href={downloadUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="col-span-2 py-2 rounded-xl bg-emerald-500 text-white text-xs font-black text-center"
+                  >
+                    {t("app.download")}
+                  </a>
+                )}
+              </div>
+            )}
+
+            {mobilePanel === "style" && (
+              <div className="space-y-2">
+                <select
+                  className="w-full px-3 py-2 rounded-xl text-xs font-medium bg-white dark:bg-slate-900 border border-gray-100 dark:border-white/10"
+                  value={settings.fontFamily}
+                  onChange={(e) => setSettings({ ...settings, fontFamily: e.target.value })}
+                >
+                  {fontOptions.map((fontName) => (
+                    <option key={fontName} value={fontName}>{fontName}</option>
+                  ))}
+                </select>
+                <input
+                  type="range"
+                  min="10"
+                  max="200"
+                  step="1"
+                  className="w-full accent-primary"
+                  value={settings.fontSize}
+                  onChange={(e) => setSettings({ ...settings, fontSize: e.target.value })}
+                />
+                <div className="grid grid-cols-4 gap-2">
+                  <button
+                    onClick={() => setSettings({ ...settings, fontWeight: settings.fontWeight === "bold" ? "normal" : "bold" })}
+                    className={`p-2 rounded-lg border ${settings.fontWeight === "bold" ? "bg-primary text-white border-primary" : "bg-white dark:bg-white/5 border-gray-100 dark:border-white/10"}`}
+                  >
+                    <Bold className="w-4 h-4 mx-auto" />
+                  </button>
+                  <button
+                    onClick={() => setSettings({ ...settings, fontStyle: settings.fontStyle === "italic" ? "normal" : "italic" })}
+                    className={`p-2 rounded-lg border ${settings.fontStyle === "italic" ? "bg-primary text-white border-primary" : "bg-white dark:bg-white/5 border-gray-100 dark:border-white/10"}`}
+                  >
+                    <Italic className="w-4 h-4 mx-auto" />
+                  </button>
+                  <button
+                    onClick={() => setSettings({ ...settings, textDecoration: settings.textDecoration === "underline" ? "none" : "underline" })}
+                    className={`p-2 rounded-lg border ${settings.textDecoration === "underline" ? "bg-primary text-white border-primary" : "bg-white dark:bg-white/5 border-gray-100 dark:border-white/10"}`}
+                  >
+                    <Underline className="w-4 h-4 mx-auto" />
+                  </button>
+                  <input
+                    type="color"
+                    className="w-full h-full min-h-9 rounded-lg border border-gray-100 dark:border-white/10 bg-transparent cursor-pointer"
+                    value={settings.color}
+                    onChange={(e) => setSettings({ ...settings, color: e.target.value })}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
 {/* Ribbon Topbar */}
-      <div className="shrink-0 z-[100] bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-white/10 shadow-sm">
+      <div className="hidden lg:block shrink-0 z-[100] bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-white/10 shadow-sm">
         <div className="max-w-[1600px] mx-auto flex items-center gap-8 px-8 py-2 overflow-x-auto no-scrollbar border-b border-gray-50 dark:border-white/5">
           {/* Logo Section */}
           <div className="flex items-center gap-3 shrink-0 py-2 border-r border-gray-100 dark:border-white/10 pr-8">
@@ -840,8 +1043,8 @@ function AppGenerator() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto scroll-smooth">
-        <div className="max-w-[1600px] mx-auto px-8 py-8">
+      <div className="flex-1 overflow-y-auto scroll-smooth pb-28 lg:pb-0">
+        <div className="max-w-[1600px] mx-auto px-3 lg:px-8 py-4 lg:py-8">
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,65%)_minmax(0,35%)] gap-8 items-start">
             {/* Main Preview Area */}
             <div className="space-y-6">
@@ -910,9 +1113,9 @@ function AppGenerator() {
                   </div>
                 </div>
 
-                <div className="relative group min-h-[750px] flex items-center justify-center bg-gray-100/30 dark:bg-slate-950/40 m-4 rounded-[40px] border-2 border-dashed border-gray-100 dark:border-white/5 shadow-inner overflow-hidden">
+                <div className="relative group min-h-[420px] lg:min-h-[750px] flex items-center justify-center bg-gray-100/30 dark:bg-slate-950/40 m-2 lg:m-4 rounded-[24px] lg:rounded-[40px] border-2 border-dashed border-gray-100 dark:border-white/5 shadow-inner overflow-hidden">
                   {modelPreviewSrc && useTable && (
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 z-20">
+                    <div className="absolute right-2 lg:right-4 top-2 lg:top-1/2 lg:-translate-y-1/2 z-20">
                       <div className="bg-white/90 dark:bg-slate-900/85 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl p-2 shadow-xl flex flex-col gap-2">
                         <button
                           onClick={() => handleModeSelect("name")}
@@ -958,7 +1161,7 @@ function AppGenerator() {
                           src={modelPreviewSrc}
                           ref={modelImgRef}
                           onClick={handleImageClick}
-                          className="max-w-full max-h-[75vh] shadow-2xl rounded-sm select-none"
+                          className="max-w-full max-h-[62vh] lg:max-h-[75vh] shadow-2xl rounded-sm select-none"
                           alt="Work in progress"
                           draggable={false}
                         />
@@ -1038,7 +1241,7 @@ function AppGenerator() {
             </div>
 
             {/* Controls Area */}
-            <div className="space-y-2 lg:min-h-[520px]">
+            <div className="hidden lg:block space-y-2 lg:min-h-[520px]">
               <motion.section
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -1187,6 +1390,42 @@ function AppGenerator() {
             <span className="text-primary font-bold">Namster</span> Premium.
           </p>
         </footer>
+      </div>
+
+      <div className="lg:hidden fixed bottom-3 left-3 right-3 z-[120]">
+        <div className="rounded-2xl border border-gray-200 dark:border-white/15 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-2 shadow-2xl">
+          {!sessionId ? (
+            <button
+              onClick={() => setMobilePanel("import")}
+              className="w-full py-2.5 rounded-xl bg-primary text-white text-xs font-black"
+            >
+              1. Importer les fichiers
+            </button>
+          ) : !coordsName ? (
+            <button
+              onClick={() => setMobilePanel("mode")}
+              className="w-full py-2.5 rounded-xl bg-amber-500 text-white text-xs font-black"
+            >
+              2. Place le point N sur le modele
+            </button>
+          ) : !testPreviewSrc ? (
+            <button
+              onClick={handleTest}
+              disabled={!canTest}
+              className="w-full py-2.5 rounded-xl bg-primary text-white text-xs font-black disabled:opacity-40"
+            >
+              3. Lancer un test
+            </button>
+          ) : (
+            <button
+              onClick={handleGenerate}
+              disabled={!canGenerate}
+              className="w-full py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-black disabled:opacity-40"
+            >
+              4. Generer le lot final
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

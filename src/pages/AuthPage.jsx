@@ -24,6 +24,9 @@ const AuthPage = ({ mode = 'login' }) => {
     const [loading, setLoading] = useState(false);
 
     const handleGoogleLogin = useGoogleLogin({
+        flow: 'implicit',
+        ux_mode: 'popup',
+        scope: 'openid email profile',
         onSuccess: async (tokenResponse) => {
             setLoading(true);
             try {
