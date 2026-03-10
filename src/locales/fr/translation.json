@@ -202,7 +202,16 @@
         "canvas_default_location": "PARIS, FRANCE",
         "finalize": "Terminer & Ajouter les Invités",
         "cancel": "Annuler",
-        "preview": "Aperçu en temps réel"
+        "preview": "Aperçu en temps réel",
+        "adjust_placeholders": "Ajuster Nom/Table",
+        "position_direction": "Position / Direction",
+        "full_center": "Plein / Centre",
+        "typography_colors": "Typographie & Couleurs",
+        "color_1": "Couleur 1",
+        "color_2": "Couleur 2",
+        "position_x": "Position X",
+        "position_y": "Position Y",
+        "font_size": "Taille Police"
     },
     "feedback_page": {
         "error_send": "Erreur lors de l'envoi. Veuillez réessayer.",

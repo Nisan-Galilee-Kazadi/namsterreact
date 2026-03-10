@@ -154,7 +154,7 @@ const Home = () => {
         <div className="min-h-screen relative overflow-x-hidden dashboard-bg transition-colors duration-500">
             <BackgroundDecorations />
 
-            <div className="relative z-10 p-4 md:p-8 pb-24 md:pb-8">
+            <div className="relative z-10 p-4 md:p-8 pb-32 md:pb-8">
                 <div className="max-w-7xl mx-auto">
                     <Navbar />
 

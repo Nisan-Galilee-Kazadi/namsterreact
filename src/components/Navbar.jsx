@@ -34,16 +34,16 @@ const Navbar = () => {
                         <HomeIcon className="w-4 h-4" /> <span>{t('nav.home')}</span>
                     </Link>
                     <Link
-                        to="/features"
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${isActive('/features') ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-600 dark:text-white hover:bg-white/50 dark:hover:bg-white/10'}`}
-                    >
-                        <Star className="w-4 h-4" /> <span>{t('nav.features')}</span>
-                    </Link>
-                    <Link
                         to="/demo"
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${isActive('/demo') ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-600 dark:text-white hover:bg-white/50 dark:hover:bg-white/10'}`}
                     >
                         <MonitorPlay className="w-4 h-4" /> <span>{t('nav.demo')}</span>
+                    </Link>
+                    <Link
+                        to="/features"
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${isActive('/features') ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-600 dark:text-white hover:bg-white/50 dark:hover:bg-white/10'}`}
+                    >
+                        <Star className="w-4 h-4" /> <span>{t('nav.features')}</span>
                     </Link>
                     {user ? (
                         <Link
@@ -80,14 +80,14 @@ const Navbar = () => {
                     className={`flex flex-col items-center gap-1 transition-all ${isActive('/') ? 'text-primary scale-110' : 'text-gray-400 dark:text-white'}`}
                 >
                     <HomeIcon className={`w-6 h-6 ${isActive('/') ? 'fill-primary/10' : ''}`} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider hidden md:block">{t('nav.home')}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">{t('nav.home')}</span>
                 </Link>
                 <Link
-                    to="/demo"
-                    className={`flex flex-col items-center gap-1 transition-all ${isActive('/demo') ? 'text-primary scale-110' : 'text-gray-400 dark:text-white'}`}
+                    to="/features"
+                    className={`flex flex-col items-center gap-1 transition-all ${isActive('/features') ? 'text-primary scale-110' : 'text-gray-400 dark:text-white'}`}
                 >
-                    <MonitorPlay className={`w-6 h-6 ${isActive('/demo') ? 'fill-primary/10' : ''}`} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">{t('nav.demo')}</span>
+                    <Star className={`w-6 h-6 ${isActive('/features') ? 'fill-primary/10' : ''}`} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">{t('nav.functions')}</span>
                 </Link>
                 <Link
                     to="/app"
@@ -98,11 +98,11 @@ const Navbar = () => {
                     </div>
                 </Link>
                 <Link
-                    to="/features"
-                    className={`flex flex-col items-center gap-1 transition-all ${isActive('/features') ? 'text-primary scale-110' : 'text-gray-400 dark:text-white'}`}
+                    to="/demo"
+                    className={`flex flex-col items-center gap-1 transition-all ${isActive('/demo') ? 'text-primary scale-110' : 'text-gray-400 dark:text-white'}`}
                 >
-                    <Star className={`w-6 h-6 ${isActive('/features') ? 'fill-primary/10' : ''}`} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">{t('nav.functions')}</span>
+                    <MonitorPlay className={`w-6 h-6 ${isActive('/demo') ? 'fill-primary/10' : ''}`} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">{t('nav.demo')}</span>
                 </Link>
                 {user ? (
                     <Link

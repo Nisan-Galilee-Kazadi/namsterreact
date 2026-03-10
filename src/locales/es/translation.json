@@ -1,6 +1,6 @@
 {
     "welcome": "Bienvenido",
-    "login": "Iniciar sesión",
+    "login": "Acceder",
     "signup": "Regístrate",
     "language": "Idioma",
     "nav": {
@@ -8,7 +8,7 @@
         "features": "Funcionalidades",
         "demo": "Demo",
         "dashboard": "Panel de control",
-        "login": "Iniciar sesión",
+        "login": "Entrar",
         "launch": "Lanzar la app",
         "profile": "Perfil",
         "functions": "Funciones"
@@ -77,14 +77,14 @@
         "birthdate": "Fecha de nacimiento",
         "back": "Volver",
         "loading": "Cargando...",
-        "btn_login": "Iniciar sesión",
+        "btn_login": "Entrar",
         "btn_continue": "Continuar",
         "btn_register": "Registrarse",
         "or_continue": "O continuar con",
         "no_account": "¿No tienes cuenta?",
         "already_account": "¿Ya tienes cuenta?",
         "register_link": "Regístrate",
-        "login_link": "Inicia sesión",
+        "login_link": "Entrar",
         "error_required": "Por favor completa todos los campos obligatorios.",
         "error_google": "Error al iniciar sesión con Google",
         "error_google_failed": "El inicio de sesión con Google falló",
@@ -202,7 +202,16 @@
         "canvas_default_location": "PARÍS, FRANCIA",
         "finalize": "Finalizar y Agregar Invitados",
         "cancel": "Cancelar",
-        "preview": "Vista previa en tiempo real"
+        "preview": "Vista previa en tiempo real",
+        "adjust_placeholders": "Ajustar Nombre/Mesa",
+        "position_direction": "Posición / Dirección",
+        "full_center": "Completo / Centro",
+        "typography_colors": "Tipografía y Colores",
+        "color_1": "Color 1",
+        "color_2": "Color 2",
+        "position_x": "Posición X",
+        "position_y": "Posición Y",
+        "font_size": "Tamaño de Fuenta"
     },
     "feedback_page": {
         "error_send": "Error al enviar. Por favor, inténtalo de nuevo.",

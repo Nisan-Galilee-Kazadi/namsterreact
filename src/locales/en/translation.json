@@ -202,7 +202,16 @@
         "canvas_default_location": "PARIS, FRANCE",
         "finalize": "Finalize & Add Guests",
         "cancel": "Cancel",
-        "preview": "Live Preview"
+        "preview": "Live Preview",
+        "adjust_placeholders": "Adjust Name/Table",
+        "position_direction": "Position / Direction",
+        "full_center": "Full / Center",
+        "typography_colors": "Typography & Colors",
+        "color_1": "Color 1",
+        "color_2": "Color 2",
+        "position_x": "Position X",
+        "position_y": "Position Y",
+        "font_size": "Font Size"
     },
     "feedback_page": {
         "error_send": "Error while sending. Please try again.",

@@ -23,6 +23,7 @@ import {
   Bell,
   Globe,
   CheckCircle,
+  Settings2,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import SideMenu from "../components/SideMenu";
@@ -37,6 +38,14 @@ const Dashboard = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [visibleAdvanced, setVisibleAdvanced] = useState({
+    title: false,
+    date: false,
+    time: false,
+    location: false,
+    description: false,
+    placeholders: false
+  });
   const [customizationData, setCustomizationData] = useState({
     title: "",
     date: "",
@@ -48,8 +57,16 @@ const Dashboard = () => {
     fontFamily: "Outfit",
     bgType: "gradient", // 'gradient' | 'image'
     bgImage: null,
-    bgPosition: "full",
-    textColor: "#1a1a1a"
+    bgPosition: "center", // 'full/center', 'left', 'right'
+    textColor: "#1a1a1a",
+    elementsConfig: {
+      title: { x: null, y: null, size: null },
+      date: { x: null, y: null, size: null },
+      time: { x: null, y: null, size: null },
+      description: { x: null, y: null, size: null },
+      location: { x: null, y: null, size: null },
+      placeholders: { x: null, y: null, size: null }
+    }
   });
 
   const getContrastYIQ = (hexcolor) => {
@@ -115,62 +132,135 @@ const Dashboard = () => {
   }, []);
 
   const templates = [
+    // --- WEDDING (Romantic & Elegant) ---
     {
-      id: 1,
-      nameKey: "dashboard.templates.rose_eternelle",
-      categoryKey: "dashboard.template_categories.wedding",
-      colors: ["#fad0c4", "#ffd1ff"],
-      bgStyle: "linear-gradient(135deg, #fad0c4 0%, #ffd1ff 100%)",
-      icon: <Sparkles />,
-      decor: "flowers",
-      layout: "centered",
-      defaultFont: "Great Vibes"
+      id: 1, nameKey: "wedding_arch_minimal", categoryKey: "wedding", colors: ["#fffaf0", "#fdfcf0"], bgStyle: "gradient", decor: "arch-minimal", layout: "centered", defaultFont: "Pinyon Script",
+      config: { title: { x: 400, y: 160, size: 84 }, date: { x: 400, y: 300, size: 32 }, time: { x: 400, y: 340, size: 20 }, description: { x: 400, y: 420, size: 18 }, location: { x: 400, y: 530, size: 22 }, placeholders: { x: 400, y: 470, size: 20 } }
     },
     {
-      id: 2,
-      nameKey: "dashboard.templates.soiree_gold",
-      categoryKey: "dashboard.template_categories.gala",
-      colors: ["#1a1a1a", "#434343"],
-      bgStyle: "linear-gradient(to bottom, #1a1a1a, #434343)",
-      icon: <Star />,
-      decor: "geometric",
-      layout: "split",
-      defaultFont: "Outfit",
-      primaryColor: "#1a1a1a"
+      id: 2, nameKey: "wedding_ornate_floral", categoryKey: "wedding", colors: ["#ffffff", "#f8f9fa"], bgStyle: "gradient", decor: "ornate-border", layout: "centered", defaultFont: "Great Vibes",
+      config: { title: { x: 400, y: 220, size: 72 }, date: { x: 400, y: 320, size: 28 }, time: { x: 400, y: 360, size: 18 }, description: { x: 400, y: 440, size: 16 }, location: { x: 400, y: 550, size: 20 }, placeholders: { x: 400, y: 490, size: 18 } }
     },
     {
-      id: 3,
-      nameKey: "dashboard.templates.anniversaire_fun",
-      categoryKey: "dashboard.template_categories.party",
-      colors: ["#84fab0", "#8fd3f4"],
-      bgStyle: "linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%)",
-      icon: <Zap />,
-      decor: "confetti",
-      layout: "modern",
-      defaultFont: "Bebas Neue"
+      id: 3, nameKey: "wedding_botanical_split", categoryKey: "wedding", colors: ["#f1f8e9", "#ffffff"], bgStyle: "gradient", decor: "leaf-border", layout: "split-horizontal", defaultFont: "Bodoni Moda",
+      config: { title: { x: 400, y: 100, size: 72 }, date: { x: 220, y: 350, size: 38 }, time: { x: 220, y: 400, size: 22 }, description: { x: 580, y: 350, size: 18 }, location: { x: 400, y: 550, size: 22 }, placeholders: { x: 580, y: 450, size: 18 } }
     },
     {
-      id: 4,
-      nameKey: "dashboard.templates.minimalist_modern",
-      categoryKey: "dashboard.template_categories.corporate",
-      colors: ["#ffffff", "#f5f5f5"],
-      bgStyle: "linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%)",
-      icon: <LayoutGrid />,
-      decor: "none",
-      layout: "centered",
-      defaultFont: "Inter"
+      id: 4, nameKey: "wedding_boho_corners", categoryKey: "wedding", colors: ["#fff9c4", "#fffde7"], bgStyle: "gradient", decor: "floral-corners", layout: "centered-tight", defaultFont: "Sacramento",
+      config: { title: { x: 400, y: 210, size: 70 }, date: { x: 400, y: 110, size: 24 }, time: { x: 400, y: 140, size: 18 }, description: { x: 400, y: 330, size: 18 }, location: { x: 400, y: 510, size: 24 }, placeholders: { x: 400, y: 430, size: 20 } }
     },
     {
-      id: 5,
-      nameKey: "dashboard.templates.luxury_black",
-      categoryKey: "dashboard.template_categories.vip",
-      colors: ["#000000", "#1a1a1a"],
-      bgStyle: "linear-gradient(135deg, #000000 0%, #1a1a1a 100%)",
-      icon: <Shield />,
-      decor: "lines",
-      layout: "split",
-      defaultFont: "Cinzel"
-    }
+      id: 5, nameKey: "wedding_royal_gold", categoryKey: "wedding", colors: ["#ffffff", "#fffdf0"], bgStyle: "gradient", decor: "royal-crest", layout: "centered", defaultFont: "Bodoni Moda",
+      config: { title: { x: 400, y: 260, size: 56 }, date: { x: 400, y: 360, size: 28 }, time: { x: 400, y: 400, size: 18 }, description: { x: 400, y: 130, size: 22 }, location: { x: 400, y: 550, size: 24 }, placeholders: { x: 400, y: 470, size: 20 } }
+    },
+    {
+      id: 6, nameKey: "wedding_vintage_script", categoryKey: "wedding", colors: ["#fff3e0", "#ffffff"], bgStyle: "gradient", decor: "border-slim", layout: "asymmetric-left", defaultFont: "Dancing Script",
+      config: { title: { x: 280, y: 160, size: 72 }, date: { x: 280, y: 260, size: 32 }, time: { x: 280, y: 310, size: 22 }, description: { x: 280, y: 390, size: 18 }, location: { x: 280, y: 530, size: 22 }, placeholders: { x: 280, y: 470, size: 20 } }
+    },
+
+    // --- GALA (Sophisticated & Bold) ---
+    {
+      id: 7, nameKey: "gala_midnight_gold", categoryKey: "gala", colors: ["#000000", "#1a1a1a"], bgStyle: "gradient", decor: "golden-dust", layout: "centered-wide", defaultFont: "Cinzel",
+      config: { title: { x: 400, y: 200, size: 72 }, date: { x: 400, y: 340, size: 32 }, time: { x: 400, y: 380, size: 20 }, description: { x: 400, y: 440, size: 18 }, location: { x: 400, y: 120, size: 24 }, placeholders: { x: 400, y: 540, size: 22 } }
+    },
+    {
+      id: 8, nameKey: "gala_emerald_arch", categoryKey: "gala", colors: ["#064e3b", "#065f46"], bgStyle: "gradient", decor: "arch", layout: "centered", defaultFont: "Playfair Display",
+      config: { title: { x: 400, y: 220, size: 84 }, date: { x: 400, y: 350, size: 32 }, time: { x: 400, y: 390, size: 22 }, description: { x: 400, y: 120, size: 18 }, location: { x: 400, y: 540, size: 24 }, placeholders: { x: 400, y: 480, size: 20 } }
+    },
+    {
+      id: 9, nameKey: "gala_art_deco_lines", categoryKey: "gala", colors: ["#1e293b", "#0f172a"], bgStyle: "gradient", decor: "deco-lines", layout: "centered", defaultFont: "Bodoni Moda",
+      config: { title: { x: 400, y: 150, size: 64 }, date: { x: 400, y: 280, size: 24 }, time: { x: 400, y: 320, size: 18 }, description: { x: 400, y: 400, size: 16 }, location: { x: 400, y: 550, size: 22 }, placeholders: { x: 400, y: 480, size: 20 } }
+    },
+    {
+      id: 10, nameKey: "gala_noir_badge", categoryKey: "gala", colors: ["#111111", "#000000"], bgStyle: "gradient", decor: "badge-style", layout: "centered", defaultFont: "Cinzel",
+      config: { title: { x: 400, y: 310, size: 64 }, date: { x: 400, y: 180, size: 28 }, time: { x: 400, y: 220, size: 20 }, description: { x: 400, y: 400, size: 18 }, location: { x: 400, y: 530, size: 24 }, placeholders: { x: 400, y: 460, size: 20 } }
+    },
+    {
+      id: 11, nameKey: "gala_ruby_sidebar", categoryKey: "gala", colors: ["#450a0a", "#7f1d1d"], bgStyle: "gradient", decor: "border-thick", layout: "sidebar-left", defaultFont: "Outfit",
+      config: { title: { x: 220, y: 150, size: 60 }, date: { x: 220, y: 250, size: 32 }, time: { x: 220, y: 300, size: 22 }, description: { x: 220, y: 380, size: 18 }, location: { x: 220, y: 550, size: 22 }, placeholders: { x: 600, y: 300, size: 38 } }
+    },
+    {
+      id: 12, nameKey: "gala_minimal_chic", categoryKey: "gala", colors: ["#ffffff", "#f1f5f9"], bgStyle: "gradient", decor: "border-slim", layout: "centered", defaultFont: "Cinzel",
+      config: { title: { x: 400, y: 200, size: 72 }, date: { x: 400, y: 320, size: 32 }, time: { x: 400, y: 360, size: 24 }, description: { x: 400, y: 420, size: 18 }, location: { x: 400, y: 550, size: 24 }, placeholders: { x: 400, y: 470, size: 22 } }
+    },
+
+    // --- PARTY (Energetic & Fun) ---
+    {
+      id: 13, nameKey: "party_neon_night", categoryKey: "party", colors: ["#4c1d95", "#8b5cf6"], bgStyle: "gradient", decor: "tech-grid", layout: "centered-tight", defaultFont: "Outfit",
+      config: { title: { x: 400, y: 220, size: 84 }, date: { x: 400, y: 120, size: 28 }, time: { x: 400, y: 155, size: 18 }, description: { x: 400, y: 340, size: 18 }, location: { x: 400, y: 540, size: 24 }, placeholders: { x: 400, y: 460, size: 22 } }
+    },
+    {
+      id: 14, nameKey: "party_starry_sky", categoryKey: "party", colors: ["#1e1b4b", "#312e81"], bgStyle: "gradient", decor: "stars", layout: "centered", defaultFont: "Sacramento",
+      config: { title: { x: 400, y: 250, size: 92 }, date: { x: 400, y: 120, size: 32 }, time: { x: 400, y: 160, size: 20 }, description: { x: 400, y: 380, size: 18 }, location: { x: 400, y: 530, size: 24 }, placeholders: { x: 400, y: 450, size: 22 } }
+    },
+    {
+      id: 15, nameKey: "party_floral_pop", categoryKey: "party", colors: ["#fce7f3", "#fbcfe8"], bgStyle: "gradient", decor: "floral-left", layout: "asymmetric-right", defaultFont: "Great Vibes",
+      config: { title: { x: 550, y: 180, size: 72 }, date: { x: 550, y: 280, size: 32 }, time: { x: 550, y: 320, size: 22 }, description: { x: 550, y: 400, size: 18 }, location: { x: 550, y: 540, size: 24 }, placeholders: { x: 550, y: 470, size: 22 } }
+    },
+    {
+      id: 16, nameKey: "party_tropical_vibe", categoryKey: "party", colors: ["#ecfdf5", "#d1fae5"], bgStyle: "gradient", decor: "leaf-border", layout: "centered", defaultFont: "Dancing Script",
+      config: { title: { x: 400, y: 200, size: 84 }, date: { x: 400, y: 100, size: 32 }, time: { x: 400, y: 140, size: 20 }, description: { x: 400, y: 320, size: 22 }, location: { x: 400, y: 550, size: 24 }, placeholders: { x: 400, y: 430, size: 22 } }
+    },
+    {
+      id: 17, nameKey: "party_golden_dust", categoryKey: "party", colors: ["#111111", "#222222"], bgStyle: "gradient", decor: "golden-dust", layout: "centered", defaultFont: "Cinzel",
+      config: { title: { x: 400, y: 240, size: 72 }, date: { x: 400, y: 120, size: 32 }, time: { x: 400, y: 160, size: 20 }, description: { x: 400, y: 380, size: 18 }, location: { x: 400, y: 540, size: 24 }, placeholders: { x: 400, y: 460, size: 22 } }
+    },
+    {
+      id: 18, nameKey: "party_retro_disco", categoryKey: "party", colors: ["#4c1d95", "#000000"], bgStyle: "gradient", decor: "deco-lines", layout: "centered", defaultFont: "Outfit",
+      config: { title: { x: 400, y: 300, size: 84 }, date: { x: 400, y: 120, size: 32 }, time: { x: 400, y: 160, size: 24 }, description: { x: 400, y: 420, size: 20 }, location: { x: 400, y: 550, size: 26 }, placeholders: { x: 400, y: 480, size: 22 } }
+    },
+
+    // --- CORPORATE (Professional & Clean) ---
+    {
+      id: 19, nameKey: "corp_tech_focus", categoryKey: "corporate", colors: ["#0f172a", "#334155"], bgStyle: "gradient", decor: "tech-grid", layout: "sidebar-left", defaultFont: "Outfit",
+      config: { title: { x: 600, y: 150, size: 56 }, date: { x: 600, y: 250, size: 24 }, time: { x: 600, y: 290, size: 18 }, description: { x: 600, y: 380, size: 16 }, location: { x: 600, y: 540, size: 20 }, placeholders: { x: 200, y: 300, size: 32 } }
+    },
+    {
+      id: 20, nameKey: "corp_minimal_white", categoryKey: "corporate", colors: ["#ffffff", "#f8fafc"], bgStyle: "gradient", decor: "border-slim", layout: "centered", defaultFont: "Bodoni Moda",
+      config: { title: { x: 400, y: 180, size: 48 }, date: { x: 400, y: 280, size: 24 }, time: { x: 400, y: 320, size: 18 }, description: { x: 400, y: 400, size: 16 }, location: { x: 400, y: 530, size: 22 }, placeholders: { x: 400, y: 460, size: 20 } }
+    },
+    {
+      id: 21, nameKey: "corp_executive_arch", categoryKey: "corporate", colors: ["#1e293b", "#334155"], bgStyle: "gradient", decor: "arch", layout: "centered", defaultFont: "Playfair Display",
+      config: { title: { x: 400, y: 220, size: 64 }, date: { x: 400, y: 350, size: 28 }, time: { x: 400, y: 390, size: 18 }, description: { x: 400, y: 120, size: 18 }, location: { x: 400, y: 540, size: 22 }, placeholders: { x: 400, y: 460, size: 20 } }
+    },
+    {
+      id: 22, nameKey: "corp_split_design", categoryKey: "corporate", colors: ["#f8fafc", "#e2e8f0"], bgStyle: "gradient", decor: "deco-lines", layout: "split-horizontal", defaultFont: "Outfit",
+      config: { title: { x: 400, y: 100, size: 72 }, date: { x: 250, y: 350, size: 32 }, time: { x: 250, y: 400, size: 20 }, description: { x: 600, y: 350, size: 18 }, location: { x: 400, y: 550, size: 22 }, placeholders: { x: 600, y: 450, size: 20 } }
+    },
+    {
+      id: 23, nameKey: "corp_modern_badge", categoryKey: "corporate", colors: ["#111827", "#1f2937"], bgStyle: "gradient", decor: "badge-style", layout: "centered", defaultFont: "Outfit",
+      config: { title: { x: 400, y: 310, size: 56 }, date: { x: 400, y: 180, size: 24 }, time: { x: 400, y: 220, size: 18 }, description: { x: 400, y: 400, size: 16 }, location: { x: 400, y: 520, size: 22 }, placeholders: { x: 400, y: 460, size: 18 } }
+    },
+    {
+      id: 24, nameKey: "corp_grid_clean", categoryKey: "corporate", colors: ["#ffffff", "#ffffff"], bgStyle: "gradient", decor: "tech-grid", layout: "asymmetric-right", defaultFont: "Outfit",
+      config: { title: { x: 550, y: 150, size: 60 }, date: { x: 550, y: 250, size: 28 }, time: { x: 550, y: 300, size: 18 }, description: { x: 550, y: 380, size: 18 }, location: { x: 550, y: 540, size: 22 }, placeholders: { x: 550, y: 460, size: 20 } }
+    },
+
+    // --- VIP (Exclusive & Luxury) ---
+    {
+      id: 25, nameKey: "vip_noir_crest", categoryKey: "vip", colors: ["#000000", "#111111"], bgStyle: "gradient", decor: "royal-crest", layout: "centered", defaultFont: "Cinzel",
+      config: { title: { x: 400, y: 260, size: 64 }, date: { x: 400, y: 380, size: 32 }, time: { x: 400, y: 420, size: 22 }, description: { x: 400, y: 140, size: 18 }, location: { x: 400, y: 550, size: 24 }, placeholders: { x: 400, y: 480, size: 22 } }
+    },
+    {
+      id: 26, nameKey: "vip_golden_arch", categoryKey: "vip", colors: ["#1a1a1a", "#000000"], bgStyle: "gradient", decor: "arch", layout: "centered", defaultFont: "Pinyon Script",
+      config: { title: { x: 400, y: 220, size: 84 }, date: { x: 400, y: 350, size: 32 }, time: { x: 400, y: 390, size: 22 }, description: { x: 400, y: 120, size: 18 }, location: { x: 400, y: 540, size: 24 }, placeholders: { x: 400, y: 470, size: 22 } }
+    },
+    {
+      id: 27, nameKey: "vip_platinum_ornate", categoryKey: "vip", colors: ["#e2e8f0", "#f8fafc"], bgStyle: "gradient", decor: "ornate-border", layout: "centered", defaultFont: "Bodoni Moda",
+      config: { title: { x: 400, y: 200, size: 72 }, date: { x: 400, y: 320, size: 36 }, time: { x: 400, y: 360, size: 24 }, description: { x: 400, y: 420, size: 20 }, location: { x: 400, y: 550, size: 24 }, placeholders: { x: 400, y: 480, size: 22 } }
+    },
+    {
+      id: 28, nameKey: "vip_emerald_luxury", categoryKey: "vip", colors: ["#064e3b", "#065f46"], bgStyle: "gradient", decor: "border-thick", layout: "asymmetric-left", defaultFont: "Cinzel",
+      config: { title: { x: 280, y: 200, size: 64 }, date: { x: 280, y: 320, size: 32 }, time: { x: 280, y: 360, size: 24 }, description: { x: 280, y: 440, size: 18 }, location: { x: 280, y: 540, size: 24 }, placeholders: { x: 600, y: 300, size: 42 } }
+    },
+    {
+      id: 29, nameKey: "vip_script_minimal", categoryKey: "vip", colors: ["#ffffff", "#fdfcf0"], bgStyle: "gradient", decor: "arch-minimal", layout: "centered", defaultFont: "Alex Brush",
+      config: { title: { x: 400, y: 180, size: 92 }, date: { x: 400, y: 300, size: 32 }, time: { x: 400, y: 340, size: 20 }, description: { x: 400, y: 420, size: 20 }, location: { x: 400, y: 540, size: 24 }, placeholders: { x: 400, y: 470, size: 22 } }
+    },
+    {
+      id: 30, nameKey: "vip_dark_diamond", categoryKey: "vip", colors: ["#000000", "#111111"], bgStyle: "gradient", decor: "deco-lines", layout: "centered", defaultFont: "Cinzel",
+      config: { title: { x: 400, y: 250, size: 72 }, date: { x: 200, y: 450, size: 32 }, time: { x: 600, y: 450, size: 32 }, description: { x: 400, y: 320, size: 24 }, location: { x: 400, y: 550, size: 28 }, placeholders: { x: 400, y: 420, size: 26 } }
+    },
   ];
 
   const fonts = [
@@ -228,99 +318,254 @@ const Dashboard = () => {
   };
 
   const renderBackground = (ctx, width, height, loadedImg = null) => {
-    if (customizationData.bgType === 'image' && (customizationData.bgImage || loadedImg)) {
-      ctx.fillStyle = customizationData.primaryColor;
-      ctx.fillRect(0, 0, width, height);
+    const layout = selectedTemplate?.layout || "centered";
+    const decor = selectedTemplate?.decor;
 
+    // Base fill
+    ctx.fillStyle = customizationData.primaryColor || "#ffffff";
+    ctx.fillRect(0, 0, width, height);
+
+    const pos = customizationData.bgPosition || 'center';
+
+    const drawImageScaled = (img, x, y, w, h) => {
+      const scale = Math.max(w / img.width, h / img.height);
+      const iw = img.width * scale;
+      const ih = img.height * scale;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x, y, w, h);
+      ctx.clip();
+      ctx.drawImage(img, x + (w - iw) / 2, y + (h - ih) / 2, iw, ih);
+      ctx.restore();
+    };
+
+    if (customizationData.bgType === 'image' && (customizationData.bgImage || loadedImg)) {
       const img = loadedImg || new Image();
       if (!loadedImg) img.src = customizationData.bgImage;
 
       if (img.complete || loadedImg) {
-        if (customizationData.bgPosition === 'full' || customizationData.bgPosition === 'center') {
-          const scale = Math.max(width / img.width, height / img.height);
-          const x = (width / 2) - (img.width / 2) * scale;
-          const y = (height / 2) - (img.height / 2) * scale;
-          ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+        if (pos === 'center' || pos === 'full') {
+          drawImageScaled(img, 0, 0, width, height);
         } else {
           const drawWidth = width * 0.5;
-          const scale = Math.max(drawWidth / img.width, height / img.height);
-          const drawHeight = img.height * scale;
-          const finalDrawWidth = img.width * scale;
-
-          let dx = 0;
-          if (customizationData.bgPosition === 'left') dx = 0;
-          else if (customizationData.bgPosition === 'right') dx = width - finalDrawWidth;
-
-          ctx.save();
-          ctx.beginPath();
-          if (customizationData.bgPosition === 'left') ctx.rect(0, 0, width / 2, height);
-          else ctx.rect(width / 2, 0, width / 2, height);
-          ctx.clip();
-          ctx.drawImage(img, dx, (height - drawHeight) / 2, finalDrawWidth, drawHeight);
-          ctx.restore();
+          const dx = pos === 'left' ? 0 : drawWidth;
+          drawImageScaled(img, dx, 0, drawWidth, height);
         }
       }
-    } else {
-      const gradient = ctx.createLinearGradient(0, 0, width, height);
-      gradient.addColorStop(0, customizationData.primaryColor || "#ffffff");
-      gradient.addColorStop(1, customizationData.secondaryColor || "#f5f5f5");
+    } else if (customizationData.bgType === 'gradient') {
+      let gradient;
+      if (pos === 'left') {
+        gradient = ctx.createLinearGradient(0, 0, width * 0.5, 0);
+      } else if (pos === 'right') {
+        gradient = ctx.createLinearGradient(width * 0.5, 0, width, 0);
+      } else {
+        gradient = ctx.createLinearGradient(0, 0, width, height);
+      }
+
+      gradient.addColorStop(0, customizationData.primaryColor);
+      gradient.addColorStop(1, customizationData.secondaryColor);
       ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
+
+      if (pos === 'left') {
+        ctx.fillRect(0, 0, width * 0.5, height);
+        ctx.fillStyle = customizationData.secondaryColor;
+        ctx.fillRect(width * 0.5, 0, width * 0.5, height);
+      } else if (pos === 'right') {
+        ctx.fillRect(width * 0.5, 0, width * 0.5, height);
+        ctx.fillStyle = customizationData.primaryColor;
+        ctx.fillRect(0, 0, width * 0.5, height);
+      } else {
+        ctx.fillRect(0, 0, width, height);
+      }
+    }
+
+    // Special Architectural Shapes (Arches etc)
+    if (decor?.includes('arch')) {
+      ctx.save();
+      ctx.fillStyle = customizationData.secondaryColor || '#f9f9f9';
+      ctx.shadowBlur = 40;
+      ctx.shadowColor = 'rgba(0,0,0,0.1)';
+
+      const archW = width * 0.7;
+      const archH = height * 0.8;
+      const archX = (width - archW) / 2;
+      const archY = (height - archH) / 2 + 20;
+
+      ctx.beginPath();
+      ctx.moveTo(archX, archY + archH);
+      ctx.lineTo(archX, archY + archW / 2);
+      ctx.arc(archX + archW / 2, archY + archW / 2, archW / 2, Math.PI, 0);
+      ctx.lineTo(archX + archW, archY + archH);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
     }
   };
 
   const renderContent = (ctx, width, height) => {
     const layout = selectedTemplate?.layout || "centered";
-    const textColor = customizationData.textColor || getContrastYIQ(customizationData.primaryColor);
+    const decor = selectedTemplate?.decor;
+    const textColor = customizationData.textColor || "#1a1a1a";
+    const pos = customizationData.bgPosition || 'center';
 
-    // Determine content area based on layout
-    let contentWidth = width * 0.8;
+    // Default positions based on layout & background position
     let centerX = width / 2;
     let startY = 120;
     let textAlign = "center";
+    let contentWidth = width * 0.8;
 
-    // Adjust for image position if bgType is image
-    if (customizationData.bgType === 'image') {
-      if (customizationData.bgPosition === 'left') {
-        contentWidth = width * 0.45;
-        centerX = width * 0.75;
-      } else if (customizationData.bgPosition === 'right') {
-        contentWidth = width * 0.45;
-        centerX = width * 0.25;
-      }
-    } else if (layout === "split") {
+    if (pos === 'left') {
+      centerX = width * 0.75;
       contentWidth = width * 0.4;
+    } else if (pos === 'right') {
+      centerX = width * 0.25;
+      contentWidth = width * 0.4;
+    } else if (layout === "split") {
       centerX = width * 0.7;
+      contentWidth = width * 0.4;
       textAlign = "left";
     }
 
+    // Architectural Layout Details (Boxes, lines etc)
+    if (layout === "centered-box" || decor === "boxed-content") {
+      ctx.save();
+      ctx.fillStyle = customizationData.secondaryColor || 'rgba(255,255,255,0.8)';
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = 'rgba(0,0,0,0.1)';
+      const bw = width * 0.5;
+      const bh = height * 0.7;
+      ctx.fillRect((width - bw) / 2, (height - bh) / 2, bw, bh);
+      ctx.strokeRect((width - bw) / 2 + 10, (height - bh) / 2 + 10, bw - 20, bh - 20);
+      ctx.restore();
+    }
+
+    if (layout === "split-diag") {
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, height);
+      ctx.lineTo(width, 0);
+      ctx.strokeStyle = customizationData.secondaryColor;
+      ctx.lineWidth = 100;
+      ctx.globalAlpha = 0.1;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Settings helpers
+    const getConf = (key, defaultX, defaultY, defaultSize) => {
+      const conf = customizationData.elementsConfig[key] || {};
+      return {
+        x: conf.x !== null ? conf.x : defaultX,
+        y: conf.y !== null ? conf.y : defaultY,
+        size: conf.size !== null ? conf.size : defaultSize
+      };
+    };
+
+    // Elegant Separators (Pinterest style)
+    const drawSeparator = (x, y, w) => {
+      ctx.save();
+      ctx.globalAlpha = 0.3;
+      ctx.beginPath();
+      ctx.moveTo(x - w / 2, y);
+      ctx.lineTo(x + w / 2, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    };
+
     // Decor drawing
     ctx.save();
-    if (selectedTemplate?.decor === 'flowers') {
-      ctx.fillStyle = customizationData.primaryColor;
-      ctx.globalAlpha = 0.15;
-      for (let i = 0; i < 15; i++) {
+    ctx.strokeStyle = textColor;
+    ctx.fillStyle = textColor;
+
+    if (decor === 'floral-left') {
+      ctx.globalAlpha = 0.2;
+      for (let i = 0; i < 8; i++) {
         ctx.beginPath();
-        ctx.arc(Math.random() * width, Math.random() * height, 30 + Math.random() * 50, 0, Math.PI * 2);
+        const rx = 50 + Math.random() * 100;
+        const ry = Math.random() * height;
+        const rs = 40 + Math.random() * 60;
+        ctx.arc(rx, ry, rs, 0, Math.PI * 2);
         ctx.fill();
-      }
-    } else if (selectedTemplate?.decor === 'geometric') {
-      ctx.strokeStyle = textColor;
-      ctx.globalAlpha = 0.15;
-      ctx.lineWidth = 1;
-      for (let i = 0; i < 10; i++) {
-        ctx.strokeRect(20 * i, 20 * i, width - 40 * i, height - 40 * i);
-      }
-    } else if (selectedTemplate?.decor === 'lines') {
-      ctx.strokeStyle = textColor;
-      ctx.globalAlpha = 0.1;
-      ctx.lineWidth = 1;
-      for (let i = 0; i < 15; i++) {
-        ctx.beginPath();
-        ctx.moveTo(0, i * 40);
-        ctx.lineTo(width, i * 40 + 100);
         ctx.stroke();
       }
+    } else if (decor === 'floral-corners') {
+      ctx.globalAlpha = 0.3;
+      const s = 120;
+      [[0, 0], [width, 0], [0, height], [width, height]].forEach(([x, y]) => {
+        ctx.beginPath();
+        ctx.arc(x, y, s, 0, Math.PI * 2);
+        ctx.stroke();
+        for (let j = 0; j < 5; j++) {
+          ctx.beginPath();
+          ctx.arc(x, y, s - (j * 15), 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      });
+    } else if (decor === 'border-slim' || decor === 'border-thick' || decor === 'ornate-border') {
+      ctx.globalAlpha = 0.4;
+      const padding = decor === 'border-slim' ? 25 : 50;
+      ctx.lineWidth = decor === 'border-thick' ? 8 : 2;
+      ctx.strokeRect(padding, padding, width - padding * 2, height - padding * 2);
+
+      if (decor === 'ornate-border') {
+        ctx.lineWidth = 1;
+        ctx.strokeRect(padding + 10, padding + 10, width - (padding + 10) * 2, height - (padding + 10) * 2);
+        // Corner accents
+        const cs = 40;
+        [[padding, padding], [width - padding, padding], [padding, height - padding], [width - padding, height - padding]].forEach(([cx, cy]) => {
+          ctx.beginPath();
+          ctx.arc(cx, cy, cs, 0, Math.PI * 2);
+          ctx.stroke();
+        });
+      }
+    } else if (decor === 'deco-lines') {
+      ctx.globalAlpha = 0.3;
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 8; i++) {
+        const d = i * 15;
+        ctx.strokeRect(d, d, width - d * 2, height - d * 2);
+      }
+      ctx.beginPath();
+      ctx.moveTo(width / 2, 0); ctx.lineTo(width / 2, height);
+      ctx.moveTo(0, height / 2); ctx.lineTo(width, height / 2);
+      ctx.stroke();
+    } else if (decor === 'tech-grid') {
+      ctx.globalAlpha = 0.08;
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < width; i += 50) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke();
+      }
+      for (let i = 0; i < height; i += 50) {
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
+      }
+    } else if (decor === 'leaf-border') {
+      ctx.globalAlpha = 0.1;
+      for (let i = 0; i < 30; i++) {
+        ctx.beginPath();
+        const rx = Math.random() * width;
+        const ry = i % 2 === 0 ? Math.random() * 80 : height - Math.random() * 80;
+        ctx.ellipse(rx, ry, 70, 25, Math.random() * Math.PI, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (decor === 'stars' || decor === 'golden-dust') {
+      ctx.globalAlpha = decor === 'stars' ? 0.6 : 0.4;
+      for (let i = 0; i < 150; i++) {
+        const size = Math.random() * 2;
+        ctx.fillRect(Math.random() * width, Math.random() * height, size, size);
+      }
+    } else if (decor === 'royal-crest' || decor === 'badge-style') {
+      ctx.globalAlpha = 0.2;
+      const cx = width / 2;
+      const cy = decor === 'royal-crest' ? 80 : 300;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 60, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx, cy, 50, 0, Math.PI * 2);
+      ctx.fill();
     }
     ctx.restore();
 
@@ -328,69 +573,66 @@ const Dashboard = () => {
     ctx.fillStyle = textColor;
 
     // 1. Title
-    const titleSize = layout === "modern" ? 72 : 56;
-    ctx.font = `bold ${titleSize}px "${customizationData.fontFamily}", sans-serif`;
-    ctx.fillText(customizationData.title || t('template_modal.canvas_default_title'), centerX, startY);
+    const tC = getConf('title', centerX, startY, 64);
+    ctx.font = `bold ${tC.size}px "${customizationData.fontFamily}", sans-serif`;
+    ctx.fillText(customizationData.title || t('template_modal.canvas_default_title'), tC.x, tC.y);
 
-    // Separator
-    ctx.strokeStyle = textColor;
-    ctx.lineWidth = 2;
-    ctx.globalAlpha = 0.3;
-    const sepX = textAlign === "center" ? centerX - 60 : centerX - 0;
-    ctx.beginPath();
-    ctx.moveTo(sepX, startY + 20);
-    ctx.lineTo(sepX + 120, startY + 20);
-    ctx.stroke();
-    ctx.globalAlpha = 1.0;
+    if (decor === 'ornate-border' || layout.includes('centered')) {
+      drawSeparator(tC.x, tC.y + 40, 100);
+    }
 
-    // 2. Date & Time
-    ctx.font = `normal 28px "${customizationData.fontFamily}", sans-serif`;
-    ctx.fillText((customizationData.date || t('template_modal.canvas_default_date')), centerX, startY + 80);
-    ctx.font = `300 20px "${customizationData.fontFamily}", sans-serif`;
-    ctx.fillText(customizationData.time || t('template_modal.canvas_default_time'), centerX, startY + 115);
+    // 2. Date
+    const dC = getConf('date', centerX, startY + 110, 28);
+    ctx.font = `normal ${dC.size}px "${customizationData.fontFamily}", sans-serif`;
+    ctx.fillText(customizationData.date || t('template_modal.canvas_default_date'), dC.x, dC.y);
 
-    // 3. Description
-    ctx.font = `italic 18px "${customizationData.fontFamily}", sans-serif`;
+    // 3. Time
+    const tmC = getConf('time', centerX, startY + 150, 20);
+    ctx.font = `300 ${tmC.size}px "${customizationData.fontFamily}", sans-serif`;
+    ctx.fillText(customizationData.time || t('template_modal.canvas_default_time'), tmC.x, tmC.y);
+
+    // 4. Description
+    const dsC = getConf('description', centerX, startY + 180, 18);
+    ctx.font = `italic ${dsC.size}px "${customizationData.fontFamily}", sans-serif`;
     ctx.globalAlpha = 0.8;
     const descText = customizationData.description || t('template_modal.canvas_default_description');
     const words = descText.split(' ');
     let line = '';
-    let currY = startY + 180;
-    const maxDescWidth = contentWidth * 0.9;
+    let currY = dsC.y;
+    const maxDescWidth = contentWidth;
 
     for (let n = 0; n < words.length; n++) {
       let testLine = line + words[n] + ' ';
       let metrics = ctx.measureText(testLine);
       if (metrics.width > maxDescWidth && n > 0) {
-        ctx.fillText(line.trim(), centerX, currY);
+        ctx.fillText(line.trim(), dsC.x, currY);
         line = words[n] + ' ';
-        currY += 28;
+        currY += dsC.size + 10;
       } else {
         line = testLine;
       }
     }
-    ctx.fillText(line.trim(), centerX, currY);
+    ctx.fillText(line.trim(), dsC.x, currY);
 
-    // 4. Elegant Placeholders (Nom: .... et Table: ....)
+    // 5. Placeholders
+    const pC = getConf('placeholders', centerX, currY + 60, 22);
     ctx.globalAlpha = 1.0;
-    ctx.font = `bold 22px "${customizationData.fontFamily}", sans-serif`;
-    const placeholderY = currY + 60;
-    ctx.fillText(t('template_modal.canvas_guest_line'), centerX, placeholderY);
-    ctx.fillText(t('template_modal.canvas_table_line'), centerX, placeholderY + 40);
+    ctx.font = `bold ${pC.size}px "${customizationData.fontFamily}", sans-serif`;
+    ctx.fillText(t('template_modal.canvas_guest_line'), pC.x, pC.y);
+    ctx.fillText(t('template_modal.canvas_table_line'), pC.x, pC.y + pC.size + 10);
 
-    // 5. Signature App (Bottom Right)
+    // 6. Location
+    const lC = getConf('location', centerX, height - 60, 22);
+    ctx.font = `bold ${lC.size}px "${customizationData.fontFamily}", sans-serif`;
+    ctx.fillText(customizationData.location || t('template_modal.canvas_default_location'), lC.x, lC.y);
+
+    // 7. Signature
     ctx.save();
     ctx.textAlign = "right";
-    ctx.fillStyle = textColor;
     ctx.globalAlpha = 0.3;
     ctx.font = "bold 13px 'Outfit', sans-serif";
     ctx.fillText(t('template_modal.canvas_signature'), width - 20, height - 20);
     ctx.restore();
-
-    // 6. Location
-    ctx.globalAlpha = 1.0;
-    ctx.font = `bold 22px "${customizationData.fontFamily}", sans-serif`;
-    ctx.fillText(" " + (customizationData.location || t('template_modal.canvas_default_location')), centerX, height - 60);
   };
 
   const handleFinalizeTemplate = async () => {
@@ -481,7 +723,7 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         <div className="lg:col-span-3 bg-white dark:bg-white/5 p-8 rounded-[32px] border border-gray-100 dark:border-white/10 shadow-sm relative overflow-hidden group">
-          <div className="flex justify-between items-center mb-8 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 relative z-10">
             <div>
               <h3 className="text-2xl font-black text-gray-900 dark:text-white">
                 {t('dashboard.recent_activity')}
@@ -661,7 +903,15 @@ const Dashboard = () => {
                       primaryColor: tpl.colors[0],
                       secondaryColor: tpl.colors[1],
                       fontFamily: tpl.defaultFont || "Outfit",
-                      textColor: getContrastYIQ(tpl.colors[0])
+                      textColor: getContrastYIQ(tpl.colors[0]),
+                      elementsConfig: tpl.config || {
+                        title: { x: null, y: null, size: null },
+                        date: { x: null, y: null, size: null },
+                        time: { x: null, y: null, size: null },
+                        description: { x: null, y: null, size: null },
+                        location: { x: null, y: null, size: null },
+                        placeholders: { x: null, y: null, size: null }
+                      }
                     });
                   }}
                   className="px-6 py-3 bg-white dark:bg-primary text-gray-900 dark:text-white rounded-xl text-xs font-black shadow-lg hover:scale-105 transition-transform"
@@ -871,7 +1121,7 @@ const Dashboard = () => {
       <SideMenu isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
 
       <main
-        className={`flex-1 transition-all duration-300 p-8 ml-0 ${isCollapsed ? "lg:ml-20" : "lg:ml-[280px]"}`}
+        className={`flex-1 transition-all duration-300 p-4 md:p-8 ml-0 ${isCollapsed ? "lg:ml-20" : "lg:ml-[280px]"}`}
       >
         {/* Dashboard Header - Unified without tabs */}
         <div className="mb-12">
@@ -935,57 +1185,110 @@ const Dashboard = () => {
                   <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{t('template_modal.subtitle')}</p>
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t('template_modal.event_title')}</label>
-                    <input
-                      type="text"
-                      className="w-full p-4 bg-white dark:bg-white/5 dark:text-white rounded-xl border-none shadow-sm text-sm font-bold placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:ring-2 focus:ring-primary/20 outline-none"
-                      placeholder={t('template_modal.event_placeholder')}
-                      value={customizationData.title}
-                      onChange={(e) => setCustomizationData({ ...customizationData, title: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t('template_modal.date')}</label>
-                      <input
-                        type="date"
-                        className="w-full p-4 bg-white dark:bg-white/5 dark:text-white rounded-xl border-none shadow-sm text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
-                        value={customizationData.date}
-                        onChange={(e) => setCustomizationData({ ...customizationData, date: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t('template_modal.time')}</label>
-                      <input
-                        type="time"
-                        className="w-full p-4 bg-white dark:bg-white/5 dark:text-white rounded-xl border-none shadow-sm text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
-                        value={customizationData.time}
-                        onChange={(e) => setCustomizationData({ ...customizationData, time: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t('template_modal.location')}</label>
-                    <input
-                      type="text"
-                      className="w-full p-4 bg-white dark:bg-white/5 dark:text-white rounded-xl border-none shadow-sm text-sm font-bold placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:ring-2 focus:ring-primary/20 outline-none"
-                      placeholder={t('template_modal.location_placeholder')}
-                      value={customizationData.location}
-                      onChange={(e) => setCustomizationData({ ...customizationData, location: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1 mb-1 block">{t('template_modal.message')}</label>
-                    <textarea
-                      rows={4}
-                      className="w-full p-4 bg-white dark:bg-white/5 dark:text-white rounded-xl border-none shadow-sm text-sm font-medium resize-none placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:ring-2 focus:ring-primary/20 outline-none"
-                      placeholder={t('template_modal.message_placeholder')}
-                      value={customizationData.description}
-                      onChange={(e) => setCustomizationData({ ...customizationData, description: e.target.value })}
-                    />
-                  </div>
+                <div className="space-y-6">
+                  {/* Integrated Advanced Controls Helper */}
+                  {(() => {
+                    const renderAdvanced = (key) => {
+                      if (!visibleAdvanced[key]) return null;
+                      const conf = customizationData.elementsConfig[key] || { x: null, y: null, size: null };
+                      const updateConf = (updates) => {
+                        setCustomizationData({
+                          ...customizationData,
+                          elementsConfig: {
+                            ...customizationData.elementsConfig,
+                            [key]: { ...conf, ...updates }
+                          }
+                        });
+                      };
+
+                      return (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+                          className="mt-2 p-3 bg-white dark:bg-white/5 rounded-xl border border-gray-100 dark:border-white/10 space-y-3 overflow-hidden shadow-sm"
+                        >
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <label className="text-[8px] text-gray-400 font-bold uppercase">{t('template_modal.position_x')}</label>
+                              <input type="range" min="0" max="800" className="w-full h-1 bg-gray-100 dark:bg-white/10 rounded-lg appearance-none accent-primary" value={conf.x || 400} onChange={(e) => updateConf({ x: parseInt(e.target.value) })} />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[8px] text-gray-400 font-bold uppercase">{t('template_modal.position_y')}</label>
+                              <input type="range" min="0" max="600" className="w-full h-1 bg-gray-100 dark:bg-white/10 rounded-lg appearance-none accent-primary" value={conf.y || 300} onChange={(e) => updateConf({ y: parseInt(e.target.value) })} />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[8px] text-gray-400 font-bold uppercase">{t('template_modal.font_size')}: {conf.size || 'Auto'}px</label>
+                            <input type="range" min="10" max="150" className="w-full h-1 bg-gray-100 dark:bg-white/10 rounded-lg appearance-none accent-primary" value={conf.size || 24} onChange={(e) => updateConf({ size: parseInt(e.target.value) })} />
+                          </div>
+                        </motion.div>
+                      );
+                    };
+
+                    const AdvancedToggle = ({ id }) => (
+                      <button
+                        onClick={() => setVisibleAdvanced({ ...visibleAdvanced, [id]: !visibleAdvanced[id] })}
+                        className={`p-1 rounded-md transition-colors ${visibleAdvanced[id] ? 'bg-primary/20 text-primary' : 'text-gray-300 hover:text-gray-400 cursor-pointer'}`}
+                      >
+                        <Settings2 className="w-3.5 h-3.5" />
+                      </button>
+                    );
+
+                    return (
+                      <div className="space-y-5">
+                        <div className="space-y-1">
+                          <div className="flex justify-between items-center px-1">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('template_modal.event_title')}</label>
+                            <AdvancedToggle id="title" />
+                          </div>
+                          <input type="text" className="w-full p-4 bg-white dark:bg-white/5 dark:text-white rounded-2xl border-none shadow-sm text-sm font-bold placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 outline-none" placeholder={t('template_modal.event_placeholder')} value={customizationData.title} onChange={(e) => setCustomizationData({ ...customizationData, title: e.target.value })} />
+                          {renderAdvanced('title')}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <div className="flex justify-between items-center px-1">
+                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('template_modal.date')}</label>
+                              <AdvancedToggle id="date" />
+                            </div>
+                            <input type="date" className="w-full p-4 bg-white dark:bg-white/5 dark:text-white rounded-2xl border-none shadow-sm text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none" value={customizationData.date} onChange={(e) => setCustomizationData({ ...customizationData, date: e.target.value })} />
+                            {renderAdvanced('date')}
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex justify-between items-center px-1">
+                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('template_modal.time')}</label>
+                              <AdvancedToggle id="time" />
+                            </div>
+                            <input type="time" className="w-full p-4 bg-white dark:bg-white/5 dark:text-white rounded-2xl border-none shadow-sm text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none" value={customizationData.time} onChange={(e) => setCustomizationData({ ...customizationData, time: e.target.value })} />
+                            {renderAdvanced('time')}
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <div className="flex justify-between items-center px-1">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('template_modal.location')}</label>
+                            <AdvancedToggle id="location" />
+                          </div>
+                          <input type="text" className="w-full p-4 bg-white dark:bg-white/5 dark:text-white rounded-2xl border-none shadow-sm text-sm font-bold placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 outline-none" placeholder={t('template_modal.location_placeholder')} value={customizationData.location} onChange={(e) => setCustomizationData({ ...customizationData, location: e.target.value })} />
+                          {renderAdvanced('location')}
+                        </div>
+
+                        <div className="space-y-1">
+                          <div className="flex justify-between items-center px-1">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('template_modal.message')}</label>
+                            <AdvancedToggle id="description" />
+                          </div>
+                          <textarea rows={3} className="w-full p-4 bg-white dark:bg-white/5 dark:text-white rounded-2xl border-none shadow-sm text-sm font-medium resize-none placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 outline-none" placeholder={t('template_modal.message_placeholder')} value={customizationData.description} onChange={(e) => setCustomizationData({ ...customizationData, description: e.target.value })} />
+                          {renderAdvanced('description')}
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 bg-white dark:bg-white/5 rounded-2xl border border-dashed border-gray-200 dark:border-white/10 shadow-sm">
+                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('template_modal.adjust_placeholders')}</span>
+                          <AdvancedToggle id="placeholders" />
+                        </div>
+                        {renderAdvanced('placeholders')}
+                      </div>
+                    );
+                  })()}
 
                   <div className="pt-4 space-y-6">
                     <div className="space-y-3">
@@ -1005,74 +1308,49 @@ const Dashboard = () => {
                         </button>
                       </div>
 
-                      {customizationData.bgType === 'image' ? (
+                      {customizationData.bgType === 'image' || customizationData.bgType === 'gradient' ? (
                         <div className="space-y-4 p-4 bg-white dark:bg-white/5 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="text-xs w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                            onChange={(e) => {
-                              const file = e.target.files[0];
-                              if (file) {
-                                const reader = new FileReader();
-                                reader.onload = (re) => setCustomizationData({ ...customizationData, bgImage: re.target.result });
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                          />
+                          {customizationData.bgType === 'image' && (
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="text-xs w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onload = (re) => setCustomizationData({ ...customizationData, bgImage: re.target.result });
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                            />
+                          )}
                           <div className="space-y-2">
-                            <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{t('template_modal.image_position')}</label>
+                            <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{t('template_modal.position_direction')}</label>
                             <div className="flex gap-1">
-                              {['full', 'left', 'right'].map(pos => (
+                              {['center', 'left', 'right'].map(pos => (
                                 <button
                                   key={pos}
                                   onClick={() => setCustomizationData({ ...customizationData, bgPosition: pos })}
                                   className={`flex-1 py-2 rounded-lg text-[10px] font-bold border transition-all ${customizationData.bgPosition === pos ? 'bg-gray-900 dark:bg-primary text-white border-transparent' : 'bg-gray-50 dark:bg-white/5 text-gray-400 border-gray-100 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/10'}`}
                                 >
-                                  {pos === 'full'
-                                    ? t('template_modal.position_full')
-                                    : pos === 'left'
-                                      ? t('template_modal.position_left')
-                                      : t('template_modal.position_right')}
+                                  {pos === 'center' ? t('template_modal.position_full') : pos === 'left' ? t('template_modal.position_left') : t('template_modal.position_right')}
                                 </button>
                               ))}
                             </div>
                           </div>
                         </div>
-                      ) : (
-                        <div className="space-y-3">
-                          <div className="flex flex-col gap-3">
-                            <div className="flex-1">
-                              <label className="text-[10px] text-gray-400 font-bold mb-1 block">{t('template_modal.start_color')}</label>
-                              <input
-                                type="color"
-                                className="w-full h-12 p-1 bg-white rounded-xl shadow-sm border-none cursor-pointer"
-                                value={customizationData.primaryColor}
-                                onChange={(e) => setCustomizationData({ ...customizationData, primaryColor: e.target.value })}
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <label className="text-[10px] text-gray-400 font-bold mb-1 block">{t('template_modal.end_color')}</label>
-                              <input
-                                type="color"
-                                className="w-full h-12 p-1 bg-white rounded-xl shadow-sm border-none cursor-pointer"
-                                value={customizationData.secondaryColor}
-                                onChange={(e) => setCustomizationData({ ...customizationData, secondaryColor: e.target.value })}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                      ) : null}
                     </div>
 
                     <div className="space-y-4">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1 block">Typography</label>
-                      <div className="space-y-3">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1 block">{t('template_modal.typography')}</label>
+                      <div className="p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="text-[10px] text-gray-400 font-bold mb-1 block">{t('template_modal.font')}</label>
                             <select
-                              className="w-full p-4 bg-white dark:bg-white/5 dark:text-white rounded-xl border-none shadow-sm text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+                              className="w-full p-3 bg-gray-50 dark:bg-white/5 dark:text-white rounded-xl border-none text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none"
                               value={customizationData.fontFamily}
                               onChange={(e) => setCustomizationData({ ...customizationData, fontFamily: e.target.value })}
                             >
@@ -1085,12 +1363,24 @@ const Dashboard = () => {
                             <label className="text-[10px] text-gray-400 font-bold mb-1 block">{t('template_modal.text_color')}</label>
                             <input
                               type="color"
-                              className="w-full h-12 p-1 bg-white rounded-xl shadow-sm border-none cursor-pointer"
+                              className="w-full h-10 p-1 bg-white rounded-xl shadow-sm border-none cursor-pointer"
                               value={customizationData.textColor}
                               onChange={(e) => setCustomizationData({ ...customizationData, textColor: e.target.value })}
                             />
                           </div>
                         </div>
+                        {customizationData.bgType === 'gradient' && (
+                          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-50 dark:border-white/5">
+                            <div>
+                              <label className="text-[10px] text-gray-400 font-bold mb-1 block">{t('template_modal.color_1')}</label>
+                              <input type="color" className="w-full h-10 p-1 bg-white rounded-xl shadow-sm border-none cursor-pointer" value={customizationData.primaryColor} onChange={(e) => setCustomizationData({ ...customizationData, primaryColor: e.target.value })} />
+                            </div>
+                            <div>
+                              <label className="text-[10px] text-gray-400 font-bold mb-1 block">{t('template_modal.color_2')}</label>
+                              <input type="color" className="w-full h-10 p-1 bg-white rounded-xl shadow-sm border-none cursor-pointer" value={customizationData.secondaryColor} onChange={(e) => setCustomizationData({ ...customizationData, secondaryColor: e.target.value })} />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
