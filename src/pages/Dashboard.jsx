@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
+import { API_URL } from "../api";
 import {
   Plus,
   Clock,
@@ -29,15 +30,20 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import SideMenu from "../components/SideMenu";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
+import { templates } from "../data/templates";
 
 const Dashboard = () => {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [savedTemplates, setSavedTemplates] = useState([]);
+  const [favoriteLoadingId, setFavoriteLoadingId] = useState(null);
   const [visibleAdvanced, setVisibleAdvanced] = useState({
     title: false,
     date: false,
@@ -82,7 +88,9 @@ const Dashboard = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [userStats, setUserStats] = useState({ invitationsGénérées: 0, heuresGagnées: 0, precision: 100 });
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [editForm, setEditForm] = useState({ firstName: "", lastName: "", email: "" });
+  const avatarInputRef = useRef(null);
 
   const API_BASE =
     import.meta.env.VITE_API_BASE ||
@@ -115,15 +123,18 @@ const Dashboard = () => {
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
+    setIsSaving(true);
     try {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       await axios.put(`${API_BASE}/api/auth/profile`, editForm, { headers });
-      fetchDashboardData();
+      await fetchDashboardData();
       alert(t('dashboard.profile_updated_success'));
     } catch (err) {
       console.error("Failed to update profile:", err);
       alert(t('dashboard.profile_updated_error'));
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -131,134 +142,173 @@ const Dashboard = () => {
     fetchDashboardData();
   }, []);
 
+  useEffect(() => {
+    if (!user || activeTab !== 'templates') return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    axios.get(`${API_URL}/user/saved-templates`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => setSavedTemplates(res.data || []))
+      .catch(() => setSavedTemplates([]));
+  }, [user, activeTab]);
+
   const templates = [
     // --- WEDDING (Romantic & Elegant) ---
     {
       id: 1, nameKey: "wedding_arch_minimal", categoryKey: "wedding", colors: ["#fffaf0", "#fdfcf0"], bgStyle: "gradient", decor: "arch-minimal", layout: "centered", defaultFont: "Pinyon Script",
+      image: "/images/templates/wedding.png",
       config: { title: { x: 400, y: 160, size: 84 }, date: { x: 400, y: 300, size: 32 }, time: { x: 400, y: 340, size: 20 }, description: { x: 400, y: 420, size: 18 }, location: { x: 400, y: 530, size: 22 }, placeholders: { x: 400, y: 470, size: 20 } }
     },
     {
       id: 2, nameKey: "wedding_ornate_floral", categoryKey: "wedding", colors: ["#ffffff", "#f8f9fa"], bgStyle: "gradient", decor: "ornate-border", layout: "centered", defaultFont: "Great Vibes",
+      image: "/images/templates/wedding.png",
       config: { title: { x: 400, y: 220, size: 72 }, date: { x: 400, y: 320, size: 28 }, time: { x: 400, y: 360, size: 18 }, description: { x: 400, y: 440, size: 16 }, location: { x: 400, y: 550, size: 20 }, placeholders: { x: 400, y: 490, size: 18 } }
     },
     {
       id: 3, nameKey: "wedding_botanical_split", categoryKey: "wedding", colors: ["#f1f8e9", "#ffffff"], bgStyle: "gradient", decor: "leaf-border", layout: "split-horizontal", defaultFont: "Bodoni Moda",
+      image: "/images/templates/wedding.png",
       config: { title: { x: 400, y: 100, size: 72 }, date: { x: 220, y: 350, size: 38 }, time: { x: 220, y: 400, size: 22 }, description: { x: 580, y: 350, size: 18 }, location: { x: 400, y: 550, size: 22 }, placeholders: { x: 580, y: 450, size: 18 } }
     },
     {
       id: 4, nameKey: "wedding_boho_corners", categoryKey: "wedding", colors: ["#fff9c4", "#fffde7"], bgStyle: "gradient", decor: "floral-corners", layout: "centered-tight", defaultFont: "Sacramento",
+      image: "/images/templates/wedding.png",
       config: { title: { x: 400, y: 210, size: 70 }, date: { x: 400, y: 110, size: 24 }, time: { x: 400, y: 140, size: 18 }, description: { x: 400, y: 330, size: 18 }, location: { x: 400, y: 510, size: 24 }, placeholders: { x: 400, y: 430, size: 20 } }
     },
     {
       id: 5, nameKey: "wedding_royal_gold", categoryKey: "wedding", colors: ["#ffffff", "#fffdf0"], bgStyle: "gradient", decor: "royal-crest", layout: "centered", defaultFont: "Bodoni Moda",
+      image: "/images/templates/wedding.png",
       config: { title: { x: 400, y: 260, size: 56 }, date: { x: 400, y: 360, size: 28 }, time: { x: 400, y: 400, size: 18 }, description: { x: 400, y: 130, size: 22 }, location: { x: 400, y: 550, size: 24 }, placeholders: { x: 400, y: 470, size: 20 } }
     },
     {
       id: 6, nameKey: "wedding_vintage_script", categoryKey: "wedding", colors: ["#fff3e0", "#ffffff"], bgStyle: "gradient", decor: "border-slim", layout: "asymmetric-left", defaultFont: "Dancing Script",
+      image: "/images/templates/wedding.png",
       config: { title: { x: 280, y: 160, size: 72 }, date: { x: 280, y: 260, size: 32 }, time: { x: 280, y: 310, size: 22 }, description: { x: 280, y: 390, size: 18 }, location: { x: 280, y: 530, size: 22 }, placeholders: { x: 280, y: 470, size: 20 } }
     },
 
     // --- GALA (Sophisticated & Bold) ---
     {
       id: 7, nameKey: "gala_midnight_gold", categoryKey: "gala", colors: ["#000000", "#1a1a1a"], bgStyle: "gradient", decor: "golden-dust", layout: "centered-wide", defaultFont: "Cinzel",
+      image: "/images/templates/gala.png",
       config: { title: { x: 400, y: 200, size: 72 }, date: { x: 400, y: 340, size: 32 }, time: { x: 400, y: 380, size: 20 }, description: { x: 400, y: 440, size: 18 }, location: { x: 400, y: 120, size: 24 }, placeholders: { x: 400, y: 540, size: 22 } }
     },
     {
       id: 8, nameKey: "gala_emerald_arch", categoryKey: "gala", colors: ["#064e3b", "#065f46"], bgStyle: "gradient", decor: "arch", layout: "centered", defaultFont: "Playfair Display",
+      image: "/images/templates/gala.png",
       config: { title: { x: 400, y: 220, size: 84 }, date: { x: 400, y: 350, size: 32 }, time: { x: 400, y: 390, size: 22 }, description: { x: 400, y: 120, size: 18 }, location: { x: 400, y: 540, size: 24 }, placeholders: { x: 400, y: 480, size: 20 } }
     },
     {
       id: 9, nameKey: "gala_art_deco_lines", categoryKey: "gala", colors: ["#1e293b", "#0f172a"], bgStyle: "gradient", decor: "deco-lines", layout: "centered", defaultFont: "Bodoni Moda",
+      image: "/images/templates/gala.png",
       config: { title: { x: 400, y: 150, size: 64 }, date: { x: 400, y: 280, size: 24 }, time: { x: 400, y: 320, size: 18 }, description: { x: 400, y: 400, size: 16 }, location: { x: 400, y: 550, size: 22 }, placeholders: { x: 400, y: 480, size: 20 } }
     },
     {
       id: 10, nameKey: "gala_noir_badge", categoryKey: "gala", colors: ["#111111", "#000000"], bgStyle: "gradient", decor: "badge-style", layout: "centered", defaultFont: "Cinzel",
+      image: "/images/templates/gala.png",
       config: { title: { x: 400, y: 310, size: 64 }, date: { x: 400, y: 180, size: 28 }, time: { x: 400, y: 220, size: 20 }, description: { x: 400, y: 400, size: 18 }, location: { x: 400, y: 530, size: 24 }, placeholders: { x: 400, y: 460, size: 20 } }
     },
     {
       id: 11, nameKey: "gala_ruby_sidebar", categoryKey: "gala", colors: ["#450a0a", "#7f1d1d"], bgStyle: "gradient", decor: "border-thick", layout: "sidebar-left", defaultFont: "Outfit",
+      image: "/images/templates/gala.png",
       config: { title: { x: 220, y: 150, size: 60 }, date: { x: 220, y: 250, size: 32 }, time: { x: 220, y: 300, size: 22 }, description: { x: 220, y: 380, size: 18 }, location: { x: 220, y: 550, size: 22 }, placeholders: { x: 600, y: 300, size: 38 } }
     },
     {
       id: 12, nameKey: "gala_minimal_chic", categoryKey: "gala", colors: ["#ffffff", "#f1f5f9"], bgStyle: "gradient", decor: "border-slim", layout: "centered", defaultFont: "Cinzel",
+      image: "/images/templates/gala.png",
       config: { title: { x: 400, y: 200, size: 72 }, date: { x: 400, y: 320, size: 32 }, time: { x: 400, y: 360, size: 24 }, description: { x: 400, y: 420, size: 18 }, location: { x: 400, y: 550, size: 24 }, placeholders: { x: 400, y: 470, size: 22 } }
     },
 
     // --- PARTY (Energetic & Fun) ---
     {
       id: 13, nameKey: "party_neon_night", categoryKey: "party", colors: ["#4c1d95", "#8b5cf6"], bgStyle: "gradient", decor: "tech-grid", layout: "centered-tight", defaultFont: "Outfit",
+      image: "/images/templates/party.png",
       config: { title: { x: 400, y: 220, size: 84 }, date: { x: 400, y: 120, size: 28 }, time: { x: 400, y: 155, size: 18 }, description: { x: 400, y: 340, size: 18 }, location: { x: 400, y: 540, size: 24 }, placeholders: { x: 400, y: 460, size: 22 } }
     },
     {
       id: 14, nameKey: "party_starry_sky", categoryKey: "party", colors: ["#1e1b4b", "#312e81"], bgStyle: "gradient", decor: "stars", layout: "centered", defaultFont: "Sacramento",
+      image: "/images/templates/party.png",
       config: { title: { x: 400, y: 250, size: 92 }, date: { x: 400, y: 120, size: 32 }, time: { x: 400, y: 160, size: 20 }, description: { x: 400, y: 380, size: 18 }, location: { x: 400, y: 530, size: 24 }, placeholders: { x: 400, y: 450, size: 22 } }
     },
     {
       id: 15, nameKey: "party_floral_pop", categoryKey: "party", colors: ["#fce7f3", "#fbcfe8"], bgStyle: "gradient", decor: "floral-left", layout: "asymmetric-right", defaultFont: "Great Vibes",
+      image: "/images/templates/party.png",
       config: { title: { x: 550, y: 180, size: 72 }, date: { x: 550, y: 280, size: 32 }, time: { x: 550, y: 320, size: 22 }, description: { x: 550, y: 400, size: 18 }, location: { x: 550, y: 540, size: 24 }, placeholders: { x: 550, y: 470, size: 22 } }
     },
     {
       id: 16, nameKey: "party_tropical_vibe", categoryKey: "party", colors: ["#ecfdf5", "#d1fae5"], bgStyle: "gradient", decor: "leaf-border", layout: "centered", defaultFont: "Dancing Script",
+      image: "/images/templates/party.png",
       config: { title: { x: 400, y: 200, size: 84 }, date: { x: 400, y: 100, size: 32 }, time: { x: 400, y: 140, size: 20 }, description: { x: 400, y: 320, size: 22 }, location: { x: 400, y: 550, size: 24 }, placeholders: { x: 400, y: 430, size: 22 } }
     },
     {
       id: 17, nameKey: "party_golden_dust", categoryKey: "party", colors: ["#111111", "#222222"], bgStyle: "gradient", decor: "golden-dust", layout: "centered", defaultFont: "Cinzel",
+      image: "/images/templates/party.png",
       config: { title: { x: 400, y: 240, size: 72 }, date: { x: 400, y: 120, size: 32 }, time: { x: 400, y: 160, size: 20 }, description: { x: 400, y: 380, size: 18 }, location: { x: 400, y: 540, size: 24 }, placeholders: { x: 400, y: 460, size: 22 } }
     },
     {
       id: 18, nameKey: "party_retro_disco", categoryKey: "party", colors: ["#4c1d95", "#000000"], bgStyle: "gradient", decor: "deco-lines", layout: "centered", defaultFont: "Outfit",
+      image: "/images/templates/party.png",
       config: { title: { x: 400, y: 300, size: 84 }, date: { x: 400, y: 120, size: 32 }, time: { x: 400, y: 160, size: 24 }, description: { x: 400, y: 420, size: 20 }, location: { x: 400, y: 550, size: 26 }, placeholders: { x: 400, y: 480, size: 22 } }
     },
 
     // --- CORPORATE (Professional & Clean) ---
     {
       id: 19, nameKey: "corp_tech_focus", categoryKey: "corporate", colors: ["#0f172a", "#334155"], bgStyle: "gradient", decor: "tech-grid", layout: "sidebar-left", defaultFont: "Outfit",
+      image: "/images/templates/corporate.png",
       config: { title: { x: 600, y: 150, size: 56 }, date: { x: 600, y: 250, size: 24 }, time: { x: 600, y: 290, size: 18 }, description: { x: 600, y: 380, size: 16 }, location: { x: 600, y: 540, size: 20 }, placeholders: { x: 200, y: 300, size: 32 } }
     },
     {
       id: 20, nameKey: "corp_minimal_white", categoryKey: "corporate", colors: ["#ffffff", "#f8fafc"], bgStyle: "gradient", decor: "border-slim", layout: "centered", defaultFont: "Bodoni Moda",
+      image: "/images/templates/corporate.png",
       config: { title: { x: 400, y: 180, size: 48 }, date: { x: 400, y: 280, size: 24 }, time: { x: 400, y: 320, size: 18 }, description: { x: 400, y: 400, size: 16 }, location: { x: 400, y: 530, size: 22 }, placeholders: { x: 400, y: 460, size: 20 } }
     },
     {
       id: 21, nameKey: "corp_executive_arch", categoryKey: "corporate", colors: ["#1e293b", "#334155"], bgStyle: "gradient", decor: "arch", layout: "centered", defaultFont: "Playfair Display",
+      image: "/images/templates/corporate.png",
       config: { title: { x: 400, y: 220, size: 64 }, date: { x: 400, y: 350, size: 28 }, time: { x: 400, y: 390, size: 18 }, description: { x: 400, y: 120, size: 18 }, location: { x: 400, y: 540, size: 22 }, placeholders: { x: 400, y: 460, size: 20 } }
     },
     {
       id: 22, nameKey: "corp_split_design", categoryKey: "corporate", colors: ["#f8fafc", "#e2e8f0"], bgStyle: "gradient", decor: "deco-lines", layout: "split-horizontal", defaultFont: "Outfit",
+      image: "/images/templates/corporate.png",
       config: { title: { x: 400, y: 100, size: 72 }, date: { x: 250, y: 350, size: 32 }, time: { x: 250, y: 400, size: 20 }, description: { x: 600, y: 350, size: 18 }, location: { x: 400, y: 550, size: 22 }, placeholders: { x: 600, y: 450, size: 20 } }
     },
     {
       id: 23, nameKey: "corp_modern_badge", categoryKey: "corporate", colors: ["#111827", "#1f2937"], bgStyle: "gradient", decor: "badge-style", layout: "centered", defaultFont: "Outfit",
+      image: "/images/templates/corporate.png",
       config: { title: { x: 400, y: 310, size: 56 }, date: { x: 400, y: 180, size: 24 }, time: { x: 400, y: 220, size: 18 }, description: { x: 400, y: 400, size: 16 }, location: { x: 400, y: 520, size: 22 }, placeholders: { x: 400, y: 460, size: 18 } }
     },
     {
       id: 24, nameKey: "corp_grid_clean", categoryKey: "corporate", colors: ["#ffffff", "#ffffff"], bgStyle: "gradient", decor: "tech-grid", layout: "asymmetric-right", defaultFont: "Outfit",
+      image: "/images/templates/corporate.png",
       config: { title: { x: 550, y: 150, size: 60 }, date: { x: 550, y: 250, size: 28 }, time: { x: 550, y: 300, size: 18 }, description: { x: 550, y: 380, size: 18 }, location: { x: 550, y: 540, size: 22 }, placeholders: { x: 550, y: 460, size: 20 } }
     },
 
     // --- VIP (Exclusive & Luxury) ---
     {
       id: 25, nameKey: "vip_noir_crest", categoryKey: "vip", colors: ["#000000", "#111111"], bgStyle: "gradient", decor: "royal-crest", layout: "centered", defaultFont: "Cinzel",
+      image: "/images/templates/vip.png",
       config: { title: { x: 400, y: 260, size: 64 }, date: { x: 400, y: 380, size: 32 }, time: { x: 400, y: 420, size: 22 }, description: { x: 400, y: 140, size: 18 }, location: { x: 400, y: 550, size: 24 }, placeholders: { x: 400, y: 480, size: 22 } }
     },
     {
       id: 26, nameKey: "vip_golden_arch", categoryKey: "vip", colors: ["#1a1a1a", "#000000"], bgStyle: "gradient", decor: "arch", layout: "centered", defaultFont: "Pinyon Script",
-      config: { title: { x: 400, y: 220, size: 84 }, date: { x: 400, y: 350, size: 32 }, time: { x: 400, y: 390, size: 22 }, description: { x: 400, y: 120, size: 18 }, location: { x: 400, y: 540, size: 24 }, placeholders: { x: 400, y: 470, size: 22 } }
+      image: "/images/templates/vip.png",
+      config: { title: { x: 400, y: 220, size: 84 }, date: { x: 400, y: 350, size: 32 }, time: { x: 400, y: 390, size: 22 }, description: { x: 400, y: 120, size: 18 }, location: { x: 540, y: 24, size: 22 } }
     },
     {
       id: 27, nameKey: "vip_platinum_ornate", categoryKey: "vip", colors: ["#e2e8f0", "#f8fafc"], bgStyle: "gradient", decor: "ornate-border", layout: "centered", defaultFont: "Bodoni Moda",
+      image: "/images/templates/vip.png",
       config: { title: { x: 400, y: 200, size: 72 }, date: { x: 400, y: 320, size: 36 }, time: { x: 400, y: 360, size: 24 }, description: { x: 400, y: 420, size: 20 }, location: { x: 400, y: 550, size: 24 }, placeholders: { x: 400, y: 480, size: 22 } }
     },
     {
       id: 28, nameKey: "vip_emerald_luxury", categoryKey: "vip", colors: ["#064e3b", "#065f46"], bgStyle: "gradient", decor: "border-thick", layout: "asymmetric-left", defaultFont: "Cinzel",
+      image: "/images/templates/vip.png",
       config: { title: { x: 280, y: 200, size: 64 }, date: { x: 280, y: 320, size: 32 }, time: { x: 280, y: 360, size: 24 }, description: { x: 280, y: 440, size: 18 }, location: { x: 280, y: 540, size: 24 }, placeholders: { x: 600, y: 300, size: 42 } }
     },
     {
       id: 29, nameKey: "vip_script_minimal", categoryKey: "vip", colors: ["#ffffff", "#fdfcf0"], bgStyle: "gradient", decor: "arch-minimal", layout: "centered", defaultFont: "Alex Brush",
+      image: "/images/templates/vip.png",
       config: { title: { x: 400, y: 180, size: 92 }, date: { x: 400, y: 300, size: 32 }, time: { x: 400, y: 340, size: 20 }, description: { x: 400, y: 420, size: 20 }, location: { x: 400, y: 540, size: 24 }, placeholders: { x: 400, y: 470, size: 22 } }
     },
     {
       id: 30, nameKey: "vip_dark_diamond", categoryKey: "vip", colors: ["#000000", "#111111"], bgStyle: "gradient", decor: "deco-lines", layout: "centered", defaultFont: "Cinzel",
+      image: "/images/templates/vip.png",
       config: { title: { x: 400, y: 250, size: 72 }, date: { x: 200, y: 450, size: 32 }, time: { x: 600, y: 450, size: 32 }, description: { x: 400, y: 320, size: 24 }, location: { x: 400, y: 550, size: 28 }, placeholders: { x: 400, y: 420, size: 26 } }
     },
   ];
@@ -377,6 +427,18 @@ const Dashboard = () => {
       } else {
         ctx.fillRect(0, 0, width, height);
       }
+
+      // Add a subtle divider line for split modes
+      if (pos === 'left' || pos === 'right') {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(width / 2, 0);
+        ctx.lineTo(width / 2, height);
+        ctx.stroke();
+        ctx.restore();
+      }
     }
 
     // Special Architectural Shapes (Arches etc)
@@ -386,9 +448,14 @@ const Dashboard = () => {
       ctx.shadowBlur = 40;
       ctx.shadowColor = 'rgba(0,0,0,0.1)';
 
-      const archW = width * 0.7;
+      let archCenter = width / 2;
+      let archMaxWidth = width;
+      if (pos === 'left') { archCenter = width * 0.75; archMaxWidth = width * 0.5; }
+      else if (pos === 'right') { archCenter = width * 0.25; archMaxWidth = width * 0.5; }
+
+      const archW = Math.min(archMaxWidth * 0.7, 400);
       const archH = height * 0.8;
-      const archX = (width - archW) / 2;
+      const archX = archCenter - archW / 2;
       const archY = (height - archH) / 2 + 20;
 
       ctx.beginPath();
@@ -410,21 +477,40 @@ const Dashboard = () => {
 
     // Default positions based on layout & background position
     let centerX = width / 2;
-    let startY = 120;
+    let startY = 100;
     let textAlign = "center";
     let contentWidth = width * 0.8;
 
     if (pos === 'left') {
-      centerX = width * 0.75;
+      // Background Image/Gradient is on the LEFT (0-400), Text on the RIGHT (400-800)
+      centerX = width * 0.75; // Center of the right half
       contentWidth = width * 0.4;
+      textAlign = "center";
     } else if (pos === 'right') {
-      centerX = width * 0.25;
+      // Background Image/Gradient is on the RIGHT (400-800), Text on the LEFT (0-400)
+      centerX = width * 0.25; // Center of the left half
       contentWidth = width * 0.4;
-    } else if (layout === "split") {
+      textAlign = "center";
+    }
+
+    // If it's a specific split layout from template but pos is center, apply defaults
+    if (layout === "split" && pos === "center") {
       centerX = width * 0.7;
       contentWidth = width * 0.4;
       textAlign = "left";
+    } else if (layout === "sidebar-left" && pos === "center") {
+      centerX = width * 0.65;
+      contentWidth = width * 0.5;
+      textAlign = "left";
     }
+
+    // Adjust startY if needed for asymmetric layouts
+    if (pos !== 'center') {
+      startY = 140;
+    }
+
+    // Global Alignment Setup
+    ctx.textAlign = textAlign;
 
     // Architectural Layout Details (Boxes, lines etc)
     if (layout === "centered-box" || decor === "boxed-content") {
@@ -658,7 +744,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     const path = location.pathname.replace("/", "") || "overview";
-    if (path === "dashboard") setActiveTab("overview");
+    if (location.state?.tab === "templates") setActiveTab("templates");
+    else if (path === "dashboard") setActiveTab("overview");
     else setActiveTab(path);
   }, [location]);
 
@@ -835,15 +922,24 @@ const Dashboard = () => {
               {t('dashboard.fav_templates')}
             </h3>
             <div className="space-y-4">
-              {templates.slice(0, 2).map((tpl, i) => (
-                <div key={i} className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-white/5 rounded-2xl hover:bg-gray-100 dark:hover:bg-white/10 transition-all cursor-pointer">
-                  <div className="w-10 h-10 bg-white dark:bg-slate-800 rounded-xl shadow-sm flex items-center justify-center text-primary">
-                    {tpl.icon}
+              {templates.slice(0, 3).map((tpl, i) => (
+                <div
+                  key={i}
+                  onClick={() => navigate(`/customize/${tpl.id}`)}
+                  className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-white/5 rounded-2xl hover:bg-primary/5 hover:border-primary/20 border border-transparent transition-all cursor-pointer group/item"
+                >
+                  <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-xl shadow-sm flex items-center justify-center text-primary overflow-hidden border border-gray-100 dark:border-white/10">
+                    {tpl.image ? (
+                      <img src={tpl.image} alt="" className="w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-500" />
+                    ) : (
+                      <Sparkles className="w-5 h-5" />
+                    )}
                   </div>
-                  <div>
-                    <p className="text-sm font-black text-gray-900 dark:text-white">{tpl.name}</p>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">{tpl.category}</p>
+                  <div className="flex-1">
+                    <p className="text-sm font-black text-gray-900 dark:text-white group-hover/item:text-primary transition-colors">{t('dashboard.templates.' + tpl.nameKey)}</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{t('dashboard.template_categories.' + tpl.categoryKey)}</p>
                   </div>
+                  <ArrowRight className="w-4 h-4 text-gray-300 group-hover/item:text-primary group-hover/item:translate-x-1 transition-all" />
                 </div>
               ))}
             </div>
@@ -863,73 +959,134 @@ const Dashboard = () => {
         <div>
           {/* Title removed as requested, handled by main header */}
         </div>
-        <div className="flex gap-3 w-full md:w-auto">
+        <div className="flex flex-wrap gap-2 w-full md:w-auto overflow-x-auto pb-2">
+          {["all", "wedding", "gala", "party", "corporate", "vip"].map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all whitespace-nowrap ${selectedCategory === cat
+                ? "bg-primary text-white shadow-lg shadow-primary/20"
+                : "bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10"
+                }`}
+            >
+              {cat === "all" ? t('dashboard.all_categories') || "All" : t('dashboard.template_categories.' + cat)}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-3 w-full md:w-auto ml-auto">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               placeholder={t('dashboard.search')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-4 py-3 bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 shadow-sm rounded-xl text-sm w-full md:w-64 focus:ring-2 focus:ring-primary/20 outline-none text-gray-900 dark:text-white"
             />
           </div>
-          <button className="p-3 bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-xl hover:bg-gray-50 dark:hover:bg-white/10 transition-colors">
-            <Filter className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {templates.map((tpl) => (
-          <motion.div
-            key={tpl.id}
-            whileHover={{ y: -5 }}
-            className="bg-white dark:bg-white/5 rounded-[32px] border border-gray-100 dark:border-white/10 shadow-sm overflow-hidden group relative"
-          >
-            <div
-              className="aspect-[4/3] relative overflow-hidden flex items-center justify-center"
-              style={{ background: tpl.bgStyle }}
-            >
-              <div className="text-white opacity-90 scale-150 transform">
-                {tpl.icon}
-              </div>
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-
-              <div className="absolute bottom-4 right-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
+      {user && savedTemplates.length > 0 && (
+        <div className="rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-white/5 p-6">
+          <h3 className="text-sm font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-4">
+            Mes modèles sauvegardés
+          </h3>
+          <div className="flex flex-wrap gap-3">
+            {savedTemplates.map((st) => (
+              <div
+                key={st.id}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10"
+              >
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{st.name}</span>
                 <button
-                  onClick={() => {
-                    setSelectedTemplate(tpl);
-                    setCustomizationData({
-                      ...customizationData,
-                      primaryColor: tpl.colors[0],
-                      secondaryColor: tpl.colors[1],
-                      fontFamily: tpl.defaultFont || "Outfit",
-                      textColor: getContrastYIQ(tpl.colors[0]),
-                      elementsConfig: tpl.config || {
-                        title: { x: null, y: null, size: null },
-                        date: { x: null, y: null, size: null },
-                        time: { x: null, y: null, size: null },
-                        description: { x: null, y: null, size: null },
-                        location: { x: null, y: null, size: null },
-                        placeholders: { x: null, y: null, size: null }
-                      }
-                    });
-                  }}
-                  className="px-6 py-3 bg-white dark:bg-primary text-gray-900 dark:text-white rounded-xl text-xs font-black shadow-lg hover:scale-105 transition-transform"
+                  type="button"
+                  onClick={() => navigate(`/customize/${st.templateId}`, { state: { customizationData: st.customizationData } })}
+                  className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90"
                 >
-                  {t('dashboard.customize')}
+                  Ouvrir
                 </button>
               </div>
-            </div>
-            <div className="p-6">
-              <h4 className="font-bold text-gray-900 dark:text-white mb-1">
-                {t(tpl.nameKey)}
-              </h4>
-              <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">
-                {t(tpl.categoryKey)}
-              </p>
-            </div>
-          </motion.div>
-        ))}
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {templates
+          .filter((tpl) => {
+            const matchesSearch = t('dashboard.templates.' + tpl.nameKey).toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesCategory = selectedCategory === "all" || tpl.categoryKey === selectedCategory;
+            return matchesSearch && matchesCategory;
+          })
+          .map((tpl) => {
+            const isFav = user?.favoriteTemplateIds?.includes(tpl.id) ?? false;
+            return (
+              <motion.div
+                key={tpl.id}
+                whileHover={{ y: -5 }}
+                className="bg-white dark:bg-white/5 rounded-[32px] border border-gray-100 dark:border-white/10 shadow-sm overflow-hidden group relative"
+              >
+                <div
+                  className="aspect-[4/3] relative overflow-hidden flex items-center justify-center p-0"
+                  style={{ background: tpl.bgStyle }}
+                >
+                  {tpl.image ? (
+                    <img
+                      src={tpl.image}
+                      alt=""
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                  ) : (
+                    <div className="text-white opacity-90 scale-150 transform">
+                      {tpl.icon}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" />
+                  {user && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFavoriteLoadingId(tpl.id);
+                        const token = localStorage.getItem('token');
+                        if (isFav) {
+                          axios.delete(`${API_URL}/user/favorites/${tpl.id}`, { headers: { Authorization: `Bearer ${token}` } })
+                            .then(() => refreshUser())
+                            .finally(() => setFavoriteLoadingId(null));
+                        } else {
+                          axios.post(`${API_URL}/user/favorites`, { templateId: tpl.id }, { headers: { Authorization: `Bearer ${token}` } })
+                            .then(() => refreshUser())
+                            .finally(() => setFavoriteLoadingId(null));
+                        }
+                      }}
+                      disabled={favoriteLoadingId === tpl.id}
+                      className={`absolute top-3 right-3 p-2 rounded-full transition-colors ${isFav ? 'bg-primary/20 text-primary' : 'bg-white/80 dark:bg-black/30 text-gray-500 hover:text-primary'}`}
+                      title={isFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                    >
+                      <Star className={`w-4 h-4 ${isFav ? 'fill-current' : ''}`} />
+                    </button>
+                  )}
+                  <div className="absolute bottom-4 right-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
+                    <button
+                      onClick={() => navigate(`/customize/${tpl.id}`)}
+                      className="px-6 py-3 bg-white dark:bg-primary text-gray-900 dark:text-white rounded-xl text-xs font-black shadow-lg hover:scale-105 transition-transform"
+                    >
+                      {t('dashboard.customize')}
+                    </button>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <h4 className="font-bold text-gray-900 dark:text-white mb-1">
+                    {t('dashboard.templates.' + tpl.nameKey)}
+                  </h4>
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">
+                    {t('dashboard.template_categories.' + tpl.categoryKey)}
+                  </p>
+                </div>
+              </motion.div>
+            );
+          })}
       </div>
     </motion.div>
   );
@@ -1008,28 +1165,57 @@ const Dashboard = () => {
             {t('dashboard.profile_desc')}
           </p>
         </div>
-        <div className="md:col-span-2 bg-white dark:bg-white/5 p-8 rounded-[32px] border border-gray-100 dark:border-white/10 shadow-sm space-y-6">
-          <div className="flex items-center gap-6 pb-6 border-b border-gray-50 dark:border-white/10">
-            <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border-4 border-white dark:border-slate-800 shadow-lg">
-              {user?.avatar ? (
-                <img
-                  src={user.avatar}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <User className="w-10 h-10 text-primary" />
-              )}
+        <div className="md:col-span-2 bg-white dark:bg-white/5 p-8 rounded-[32px] border border-gray-100 dark:border-white/10 shadow-sm space-y-8 relative overflow-hidden">
+          {/* Subtle background element */}
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pb-8 border-b border-gray-50 dark:border-white/10 relative z-10">
+            <div className="relative group">
+              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border-4 border-white dark:border-slate-800 shadow-xl transition-transform group-hover:scale-105">
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-10 h-10 text-primary" />
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                className="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-full font-bold text-xs transition-opacity backdrop-blur-sm cursor-pointer"
+              >
+                Upload
+              </button>
+              <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={(e) => alert("Avatar upload simulation. Backend endpoint needed.")} />
             </div>
-            <button className="px-4 py-2 bg-gray-900 dark:bg-primary text-white rounded-xl text-xs font-black shadow-lg">
-              {t('dashboard.change_avatar')}
-            </button>
-            <button className="px-4 py-2 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-black text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-              {t('dashboard.delete')}
-            </button>
+
+            <div className="flex-1">
+              <h4 className="font-black text-gray-900 dark:text-white text-lg mb-1">{user?.firstName} {user?.lastName}</h4>
+              <p className="text-sm text-gray-400 font-medium mb-4">{user?.email}</p>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  className="px-5 py-2.5 bg-gray-900 dark:bg-primary text-white rounded-xl text-xs font-black shadow-lg hover:-translate-y-0.5 transition-transform"
+                >
+                  {t('dashboard.change_avatar')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { if (window.confirm("Êtes-vous sûr de vouloir supprimer votre compte ?")) alert("Action simulée.") }}
+                  className="px-5 py-2.5 bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 border border-red-100 dark:border-red-500/20 rounded-xl text-xs font-black hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
+                >
+                  {t('dashboard.delete')}
+                </button>
+              </div>
+            </div>
           </div>
-          <form onSubmit={handleUpdateProfile} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
+
+          <form onSubmit={handleUpdateProfile} className="space-y-6 relative z-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1">
                   {t('auth.firstname')}
@@ -1038,7 +1224,7 @@ const Dashboard = () => {
                   type="text"
                   value={editForm.firstName}
                   onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
-                  className="w-full p-4 bg-gray-50 dark:bg-white/5 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none text-gray-900 dark:text-white"
+                  className="w-full p-4 bg-gray-50 dark:bg-white/5 border border-transparent focus:border-primary/30 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none text-gray-900 dark:text-white transition-all shadow-sm inset-shadow-sm"
                 />
               </div>
               <div className="space-y-2">
@@ -1049,27 +1235,47 @@ const Dashboard = () => {
                   type="text"
                   value={editForm.lastName}
                   onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
-                  className="w-full p-4 bg-gray-50 dark:bg-white/5 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none text-gray-900 dark:text-white"
+                  className="w-full p-4 bg-gray-50 dark:bg-white/5 border border-transparent focus:border-primary/30 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none text-gray-900 dark:text-white transition-all shadow-sm inset-shadow-sm"
                 />
               </div>
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1">
-                {t('dashboard.email')}
+                {t('dashboard.email')} <span className="text-gray-300 ml-2 font-normal lowercase">(Non modifiable)</span>
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 dark:text-gray-600" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="email"
                   value={editForm.email}
                   disabled
-                  className="w-full p-4 pl-12 bg-gray-100 dark:bg-white/5 border-none rounded-2xl text-sm font-bold text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                  className="w-full p-4 pl-12 bg-gray-100/50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl text-sm font-bold text-gray-400 cursor-not-allowed opacity-70"
                 />
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <Shield className="w-4 h-4 text-green-500/50" />
+                </div>
               </div>
             </div>
-            <button type="submit" className="btn-primary py-4 px-8 rounded-xl font-bold ml-auto block">
-              {t('dashboard.save')}
-            </button>
+
+            <div className="pt-4 flex justify-end">
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="btn-primary py-4 px-10 rounded-xl font-black flex items-center gap-3 disabled:opacity-70 shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all"
+              >
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Enregistrement...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-5 h-5" />
+                    {t('dashboard.save')}
+                  </>
+                )}
+              </button>
+            </div>
           </form>
         </div>
       </div>
@@ -1166,257 +1372,7 @@ const Dashboard = () => {
 
 
       {/* Template Customization Modal */}
-      <AnimatePresence>
-        {selectedTemplate && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
-              onClick={() => setSelectedTemplate(null)}
-            />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white dark:bg-slate-900 rounded-[40px] shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden relative z-10 flex flex-col md:flex-row"
-            >
-              {/* Left: Inputs */}
-              <div className="w-full md:w-1/3 p-8 bg-gray-50 dark:bg-white/5 border-r border-gray-100 dark:border-white/10 overflow-y-auto">
-                <div className="mb-8">
-                  <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-2">{t('template_modal.title')}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{t('template_modal.subtitle')}</p>
-                </div>
-
-                <div className="space-y-6">
-                  {/* Integrated Advanced Controls Helper */}
-                  {(() => {
-                    const renderAdvanced = (key) => {
-                      if (!visibleAdvanced[key]) return null;
-                      const conf = customizationData.elementsConfig[key] || { x: null, y: null, size: null };
-                      const updateConf = (updates) => {
-                        setCustomizationData({
-                          ...customizationData,
-                          elementsConfig: {
-                            ...customizationData.elementsConfig,
-                            [key]: { ...conf, ...updates }
-                          }
-                        });
-                      };
-
-                      return (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
-                          className="mt-2 p-3 bg-white dark:bg-white/5 rounded-xl border border-gray-100 dark:border-white/10 space-y-3 overflow-hidden shadow-sm"
-                        >
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                              <label className="text-[8px] text-gray-400 font-bold uppercase">{t('template_modal.position_x')}</label>
-                              <input type="range" min="0" max="800" className="w-full h-1 bg-gray-100 dark:bg-white/10 rounded-lg appearance-none accent-primary" value={conf.x || 400} onChange={(e) => updateConf({ x: parseInt(e.target.value) })} />
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-[8px] text-gray-400 font-bold uppercase">{t('template_modal.position_y')}</label>
-                              <input type="range" min="0" max="600" className="w-full h-1 bg-gray-100 dark:bg-white/10 rounded-lg appearance-none accent-primary" value={conf.y || 300} onChange={(e) => updateConf({ y: parseInt(e.target.value) })} />
-                            </div>
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[8px] text-gray-400 font-bold uppercase">{t('template_modal.font_size')}: {conf.size || 'Auto'}px</label>
-                            <input type="range" min="10" max="150" className="w-full h-1 bg-gray-100 dark:bg-white/10 rounded-lg appearance-none accent-primary" value={conf.size || 24} onChange={(e) => updateConf({ size: parseInt(e.target.value) })} />
-                          </div>
-                        </motion.div>
-                      );
-                    };
-
-                    const AdvancedToggle = ({ id }) => (
-                      <button
-                        onClick={() => setVisibleAdvanced({ ...visibleAdvanced, [id]: !visibleAdvanced[id] })}
-                        className={`p-1 rounded-md transition-colors ${visibleAdvanced[id] ? 'bg-primary/20 text-primary' : 'text-gray-300 hover:text-gray-400 cursor-pointer'}`}
-                      >
-                        <Settings2 className="w-3.5 h-3.5" />
-                      </button>
-                    );
-
-                    return (
-                      <div className="space-y-5">
-                        <div className="space-y-1">
-                          <div className="flex justify-between items-center px-1">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('template_modal.event_title')}</label>
-                            <AdvancedToggle id="title" />
-                          </div>
-                          <input type="text" className="w-full p-4 bg-white dark:bg-white/5 dark:text-white rounded-2xl border-none shadow-sm text-sm font-bold placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 outline-none" placeholder={t('template_modal.event_placeholder')} value={customizationData.title} onChange={(e) => setCustomizationData({ ...customizationData, title: e.target.value })} />
-                          {renderAdvanced('title')}
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <div className="flex justify-between items-center px-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('template_modal.date')}</label>
-                              <AdvancedToggle id="date" />
-                            </div>
-                            <input type="date" className="w-full p-4 bg-white dark:bg-white/5 dark:text-white rounded-2xl border-none shadow-sm text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none" value={customizationData.date} onChange={(e) => setCustomizationData({ ...customizationData, date: e.target.value })} />
-                            {renderAdvanced('date')}
-                          </div>
-                          <div className="space-y-1">
-                            <div className="flex justify-between items-center px-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('template_modal.time')}</label>
-                              <AdvancedToggle id="time" />
-                            </div>
-                            <input type="time" className="w-full p-4 bg-white dark:bg-white/5 dark:text-white rounded-2xl border-none shadow-sm text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none" value={customizationData.time} onChange={(e) => setCustomizationData({ ...customizationData, time: e.target.value })} />
-                            {renderAdvanced('time')}
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <div className="flex justify-between items-center px-1">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('template_modal.location')}</label>
-                            <AdvancedToggle id="location" />
-                          </div>
-                          <input type="text" className="w-full p-4 bg-white dark:bg-white/5 dark:text-white rounded-2xl border-none shadow-sm text-sm font-bold placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 outline-none" placeholder={t('template_modal.location_placeholder')} value={customizationData.location} onChange={(e) => setCustomizationData({ ...customizationData, location: e.target.value })} />
-                          {renderAdvanced('location')}
-                        </div>
-
-                        <div className="space-y-1">
-                          <div className="flex justify-between items-center px-1">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('template_modal.message')}</label>
-                            <AdvancedToggle id="description" />
-                          </div>
-                          <textarea rows={3} className="w-full p-4 bg-white dark:bg-white/5 dark:text-white rounded-2xl border-none shadow-sm text-sm font-medium resize-none placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 outline-none" placeholder={t('template_modal.message_placeholder')} value={customizationData.description} onChange={(e) => setCustomizationData({ ...customizationData, description: e.target.value })} />
-                          {renderAdvanced('description')}
-                        </div>
-
-                        <div className="flex items-center justify-between p-3 bg-white dark:bg-white/5 rounded-2xl border border-dashed border-gray-200 dark:border-white/10 shadow-sm">
-                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('template_modal.adjust_placeholders')}</span>
-                          <AdvancedToggle id="placeholders" />
-                        </div>
-                        {renderAdvanced('placeholders')}
-                      </div>
-                    );
-                  })()}
-
-                  <div className="pt-4 space-y-6">
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1 block">{t('template_modal.bg_style')}</label>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setCustomizationData({ ...customizationData, bgType: 'gradient' })}
-                          className={`flex-1 py-3 rounded-xl text-xs font-bold border-2 transition-all ${customizationData.bgType === 'gradient' ? 'border-primary bg-primary/5 text-primary' : 'border-gray-100 dark:border-white/10 text-gray-400'}`}
-                        >
-                          {t('template_modal.gradient')}
-                        </button>
-                        <button
-                          onClick={() => setCustomizationData({ ...customizationData, bgType: 'image' })}
-                          className={`flex-1 py-3 rounded-xl text-xs font-bold border-2 transition-all ${customizationData.bgType === 'image' ? 'border-primary bg-primary/5 text-primary' : 'border-gray-100 dark:border-white/10 text-gray-400'}`}
-                        >
-                          {t('template_modal.image')}
-                        </button>
-                      </div>
-
-                      {customizationData.bgType === 'image' || customizationData.bgType === 'gradient' ? (
-                        <div className="space-y-4 p-4 bg-white dark:bg-white/5 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
-                          {customizationData.bgType === 'image' && (
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="text-xs w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                              onChange={(e) => {
-                                const file = e.target.files[0];
-                                if (file) {
-                                  const reader = new FileReader();
-                                  reader.onload = (re) => setCustomizationData({ ...customizationData, bgImage: re.target.result });
-                                  reader.readAsDataURL(file);
-                                }
-                              }}
-                            />
-                          )}
-                          <div className="space-y-2">
-                            <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{t('template_modal.position_direction')}</label>
-                            <div className="flex gap-1">
-                              {['center', 'left', 'right'].map(pos => (
-                                <button
-                                  key={pos}
-                                  onClick={() => setCustomizationData({ ...customizationData, bgPosition: pos })}
-                                  className={`flex-1 py-2 rounded-lg text-[10px] font-bold border transition-all ${customizationData.bgPosition === pos ? 'bg-gray-900 dark:bg-primary text-white border-transparent' : 'bg-gray-50 dark:bg-white/5 text-gray-400 border-gray-100 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/10'}`}
-                                >
-                                  {pos === 'center' ? t('template_modal.position_full') : pos === 'left' ? t('template_modal.position_left') : t('template_modal.position_right')}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1 block">{t('template_modal.typography')}</label>
-                      <div className="p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-[10px] text-gray-400 font-bold mb-1 block">{t('template_modal.font')}</label>
-                            <select
-                              className="w-full p-3 bg-gray-50 dark:bg-white/5 dark:text-white rounded-xl border-none text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none"
-                              value={customizationData.fontFamily}
-                              onChange={(e) => setCustomizationData({ ...customizationData, fontFamily: e.target.value })}
-                            >
-                              {fonts.map(font => (
-                                <option key={font} value={font}>{font}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-gray-400 font-bold mb-1 block">{t('template_modal.text_color')}</label>
-                            <input
-                              type="color"
-                              className="w-full h-10 p-1 bg-white rounded-xl shadow-sm border-none cursor-pointer"
-                              value={customizationData.textColor}
-                              onChange={(e) => setCustomizationData({ ...customizationData, textColor: e.target.value })}
-                            />
-                          </div>
-                        </div>
-                        {customizationData.bgType === 'gradient' && (
-                          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-50 dark:border-white/5">
-                            <div>
-                              <label className="text-[10px] text-gray-400 font-bold mb-1 block">{t('template_modal.color_1')}</label>
-                              <input type="color" className="w-full h-10 p-1 bg-white rounded-xl shadow-sm border-none cursor-pointer" value={customizationData.primaryColor} onChange={(e) => setCustomizationData({ ...customizationData, primaryColor: e.target.value })} />
-                            </div>
-                            <div>
-                              <label className="text-[10px] text-gray-400 font-bold mb-1 block">{t('template_modal.color_2')}</label>
-                              <input type="color" className="w-full h-10 p-1 bg-white rounded-xl shadow-sm border-none cursor-pointer" value={customizationData.secondaryColor} onChange={(e) => setCustomizationData({ ...customizationData, secondaryColor: e.target.value })} />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-8 pt-8 border-t border-gray-200">
-                  <button
-                    onClick={handleFinalizeTemplate}
-                    className="w-full py-4 bg-primary text-white rounded-2xl font-black shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
-                  >
-                    <Sparkles className="w-5 h-5" />
-                    {t('template_modal.finalize')}
-                  </button>
-                  <button
-                    onClick={() => setSelectedTemplate(null)}
-                    className="w-full py-4 mt-3 text-gray-400 dark:text-gray-500 font-bold hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                  >
-                    {t('template_modal.cancel')}
-                  </button>
-                </div>
-              </div>
-
-              {/* Right: Live Preview */}
-              <div className="w-full md:w-2/3 bg-gray-200/50 p-8 flex items-center justify-center relative">
-                <div className="absolute top-8 right-8 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 pointer-events-none">
-                  {t('template_modal.preview')}
-                </div>
-                <canvas
-                  ref={canvasRef}
-                  className="max-w-full max-h-[80vh] shadow-2xl rounded-sm bg-white dark:ring-4 dark:ring-white/10"
-                />
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      
     </div>
   );
 };

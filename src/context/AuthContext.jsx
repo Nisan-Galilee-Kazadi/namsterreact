@@ -14,6 +14,18 @@ export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
 
+    const refreshUser = async () => {
+        if (!token) return;
+        try {
+            const res = await axios.get(`${API_URL}/user/profile`);
+            setUser(res.data);
+            localStorage.setItem('user', JSON.stringify(res.data));
+            return res.data;
+        } catch {
+            return null;
+        }
+    };
+
     useEffect(() => {
         const bootstrapAuth = async () => {
             if (token) {
@@ -78,7 +90,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, register, googleLogin, logout }}>
+        <AuthContext.Provider value={{ user, token, loading, login, register, googleLogin, logout, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );

@@ -11,6 +11,7 @@ import ScrollToTop from './components/ScrollToTop';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Demo from './pages/Demo';
+import TemplateCustomizer from './pages/TemplateCustomizer';
 
 const PrivateRoute = ({ children, adminOnly = false }) => {
   const { user, loading } = useAuth();
@@ -68,6 +69,7 @@ function AppContent() {
         <Route path="/templates" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/history" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/settings" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/customize/:id" element={<PrivateRoute><TemplateCustomizer /></PrivateRoute>} />
       </Routes>
     </Router>
   );
