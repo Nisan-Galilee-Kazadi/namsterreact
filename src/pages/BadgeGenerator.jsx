@@ -1,14 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { jsPDF } from 'jspdf';
 import { QRCodeCanvas } from 'qrcode.react';
-import { 
-    Download, 
-    Plus, 
-    Trash2, 
-    Printer, 
-    Image as ImageIcon, 
-    User, 
-    MousePointer2, 
+import {
+    Download,
+    Plus,
+    Trash2,
+    Printer,
+    Image as ImageIcon,
+    User,
+    MousePointer2,
     Type,
     Briefcase,
     Sparkles,
@@ -18,23 +18,29 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SideMenu from '../components/SideMenu';
+import TopBar from '../components/TopBar';
 
 const BadgeGenerator = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const [isCollapsed, setIsCollapsed] = useState(false);
-    
+    const [isCollapsed, setIsCollapsed] = useState(localStorage.getItem('sidebarCollapsed') === 'true');
+
+    const handleToggleSidebar = (val) => {
+        setIsCollapsed(val);
+        localStorage.setItem('sidebarCollapsed', val);
+    };
+
     // States
     const [names, setNames] = useState(['JEAN DUPONT', 'MARIE CURIE', 'ALBERT EINSTEIN']);
     const [workstation, setWorkstation] = useState('POSTE 01'); // "Poste de Travail" instead of "Site"
     const [newName, setNewName] = useState('');
     const [badgeModel, setBadgeModel] = useState(null);
     const [selectedMode, setSelectedMode] = useState('name'); // 'name' or 'workstation'
-    
+
     // Positions in percentage (0 to 100)
     const [namePos, setNamePos] = useState({ x: 50, y: 50 });
     const [workPos, setWorkPos] = useState({ x: 50, y: 65 });
-    
+
     // Styling
     const [fontSize, setFontSize] = useState(24);
     const [textColor, setTextColor] = useState('#1e293b');
@@ -69,7 +75,7 @@ const BadgeGenerator = () => {
         const rect = visualizerRef.current.getBoundingClientRect();
         const x = ((e.clientX - rect.left) / rect.width) * 100;
         const y = ((e.clientY - rect.top) / rect.height) * 100;
-        
+
         if (selectedMode === 'name') {
             setNamePos({ x, y });
         } else {
@@ -82,7 +88,7 @@ const BadgeGenerator = () => {
         const pageWidth = 210;
         const pageHeight = 297;
         const margin = 10;
-        
+
         const badgeWidth = (pageWidth - (margin * 3)) / 2;
         const badgeHeight = (pageHeight - (margin * 6)) / 5;
 
@@ -114,7 +120,7 @@ const BadgeGenerator = () => {
             const nameX = x + (namePos.x * badgeWidth) / 100;
             const nameY = y + (namePos.y * badgeHeight) / 100;
 
-            const displayText = appendWorkToName 
+            const displayText = appendWorkToName
                 ? `${names[i]} - ${workstation}`
                 : names[i];
 
@@ -134,10 +140,11 @@ const BadgeGenerator = () => {
 
     return (
         <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 flex transition-colors duration-300 font-outfit">
-            <SideMenu isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+            <SideMenu isCollapsed={isCollapsed} setIsCollapsed={handleToggleSidebar} />
 
-            <main className={`flex-1 transition-all duration-300 p-4 md:p-8 ml-0 ${isCollapsed ? "lg:ml-20" : "lg:ml-[280px]"}`}>
-                <div className="max-w-7xl mx-auto">
+            <main className={`flex-1 flex flex-col transition-all duration-300 p-4 md:p-8 ml-0 pt-32 ${isCollapsed ? "lg:ml-[80px]" : "lg:ml-[280px]"}`}>
+                <TopBar isCollapsed={isCollapsed} />
+                <div className="mt-8 max-w-7xl mx-auto">
                     {/* Header */}
                     <div className="mb-12">
                         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
@@ -165,7 +172,7 @@ const BadgeGenerator = () => {
                                     <ImageIcon className="w-5 h-5 text-primary" />
                                     1. Modèle de Badge
                                 </h3>
-                                <div 
+                                <div
                                     onClick={() => fileInputRef.current.click()}
                                     className="aspect-[1.8/1] border-2 border-dashed border-gray-200 dark:border-white/10 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all overflow-hidden relative group"
                                 >
@@ -179,12 +186,12 @@ const BadgeGenerator = () => {
                                             <p className="text-sm font-black text-gray-600 dark:text-gray-400 italic">Cliquer pour uploader</p>
                                         </div>
                                     )}
-                                    <input 
-                                        type="file" 
-                                        ref={fileInputRef} 
-                                        className="hidden" 
-                                        onChange={handleImageUpload} 
-                                        accept="image/*" 
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        onChange={handleImageUpload}
+                                        accept="image/*"
                                     />
                                 </div>
                             </section>
@@ -205,10 +212,10 @@ const BadgeGenerator = () => {
                                         placeholder="ex: POSTE 01"
                                     />
                                 </div>
-                                
+
                                 <label className="flex items-center gap-3 p-4 bg-primary/5 rounded-2xl border border-primary/10 cursor-pointer group">
-                                    <input 
-                                        type="checkbox" 
+                                    <input
+                                        type="checkbox"
                                         className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary accent-primary"
                                         checked={appendWorkToName}
                                         onChange={(e) => setAppendWorkToName(e.target.checked)}
@@ -254,12 +261,12 @@ const BadgeGenerator = () => {
                         <div className="xl:col-span-8 flex flex-col gap-6">
                             <section className="bg-slate-900 rounded-[40px] p-8 md:p-12 shadow-2xl relative overflow-hidden flex-1 border border-white/5">
                                 <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px]" />
-                                
+
                                 <div className="relative z-10 flex flex-col h-full">
                                     {/* Editor Toolbar */}
                                     <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
                                         <div className="flex bg-slate-800/50 backdrop-blur-md p-1.5 rounded-2xl border border-white/10">
-                                            <button 
+                                            <button
                                                 onClick={() => setSelectedMode('name')}
                                                 className={`px-5 py-2.5 rounded-xl text-[10px] font-black transition-all flex items-center gap-2 ${selectedMode === 'name' ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
                                             >
@@ -267,34 +274,34 @@ const BadgeGenerator = () => {
                                                 {appendWorkToName ? "POSITION BLOC" : "POSITION NOM"}
                                             </button>
                                             {!appendWorkToName && (
-                                                <button 
-                                                onClick={() => setSelectedMode('workstation')}
-                                                className={`px-5 py-2.5 rounded-xl text-[10px] font-black transition-all flex items-center gap-2 ${selectedMode === 'workstation' ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
-                                            >
-                                                <Briefcase className="w-3.5 h-3.5" />
-                                                POSTE DE TRAVAIL
-                                            </button>
+                                                <button
+                                                    onClick={() => setSelectedMode('workstation')}
+                                                    className={`px-5 py-2.5 rounded-xl text-[10px] font-black transition-all flex items-center gap-2 ${selectedMode === 'workstation' ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                                                >
+                                                    <Briefcase className="w-3.5 h-3.5" />
+                                                    POSTE DE TRAVAIL
+                                                </button>
                                             )}
                                         </div>
 
                                         <div className="flex items-center gap-4 bg-slate-800/50 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">
                                             <div className="flex items-center gap-2 border-r border-white/10 pr-4">
                                                 <Type className="w-4 h-4 text-slate-400" />
-                                                <input 
-                                                    type="number" 
-                                                    value={fontSize} 
+                                                <input
+                                                    type="number"
+                                                    value={fontSize}
                                                     onChange={(e) => setFontSize(parseInt(e.target.value))}
                                                     className="w-10 bg-transparent text-white text-sm font-black outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                 />
                                             </div>
                                             <div className="relative group">
-                                                <div 
+                                                <div
                                                     className="w-6 h-6 rounded-full border border-white/20 cursor-pointer shadow-inner"
                                                     style={{ backgroundColor: textColor }}
                                                 />
-                                                <input 
-                                                    type="color" 
-                                                    value={textColor} 
+                                                <input
+                                                    type="color"
+                                                    value={textColor}
                                                     onChange={(e) => setTextColor(e.target.value)}
                                                     className="absolute inset-0 opacity-0 cursor-pointer"
                                                 />
@@ -304,7 +311,7 @@ const BadgeGenerator = () => {
 
                                     {/* Canvas Area */}
                                     <div className="flex-1 flex items-center justify-center">
-                                        <motion.div 
+                                        <motion.div
                                             initial={{ scale: 0.9, opacity: 0 }}
                                             animate={{ scale: 1, opacity: 1 }}
                                             ref={visualizerRef}
@@ -322,15 +329,15 @@ const BadgeGenerator = () => {
                                             )}
 
                                             {/* Labels Overlays */}
-                                            <div 
+                                            <div
                                                 className={`absolute pointer-events-none transition-all duration-300 whitespace-nowrap flex flex-col items-center ${selectedMode === 'name' ? 'ring-2 ring-primary ring-offset-4 ring-offset-white scale-110' : 'opacity-70'}`}
                                                 style={{ left: `${namePos.x}%`, top: `${namePos.y}%`, transform: 'translate(-50%, -50%)', color: textColor, fontSize: `${fontSize}px`, fontWeight: isBold ? 'bold' : 'normal' }}
                                             >
                                                 {names[0] || 'NOM PRÉNOM'} {appendWorkToName ? `- ${workstation}` : ''}
                                             </div >
-                                            
+
                                             {!appendWorkToName && (
-                                                <div 
+                                                <div
                                                     className={`absolute pointer-events-none transition-all duration-300 whitespace-nowrap ${selectedMode === 'workstation' ? 'ring-2 ring-primary ring-offset-4 ring-offset-white scale-110' : 'opacity-70'}`}
                                                     style={{ left: `${workPos.x}%`, top: `${workPos.y}%`, transform: 'translate(-50%, -50%)', color: textColor, fontSize: `${fontSize * 0.75}px`, fontWeight: 'normal' }}
                                                 >

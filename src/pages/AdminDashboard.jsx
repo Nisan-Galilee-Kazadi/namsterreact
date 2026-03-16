@@ -1,42 +1,35 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users,
-    MousePointer2,
-    Download,
-    MessageSquare,
+    UserPlus,
+    TrendingUp,
+    Shield,
     Search,
     Filter,
-    ArrowUpRight,
-    ArrowDownRight,
-    MoreHorizontal,
-    CheckCircle2,
-    Activity,
-    ShieldAlert,
-    Database,
-    Globe,
-    TrendingUp,
-    Clock,
-    UserPlus,
-    LayoutGrid,
-    List,
-    AlertCircle,
-    Server,
-    Zap,
-    Reply,
-    X,
-    Send,
+    MoreVertical,
+    Edit2,
     Trash2,
     CheckCircle,
-    DownloadCloud,
-    Pencil,
-    Save,
-    Eye
+    XCircle,
+    Mail,
+    Phone,
+    Calendar,
+    ArrowRight,
+    Search as SearchIcon,
+    AlertCircle,
+    User,
+    ChevronRight,
+    Clock,
+    MessageSquare,
+    Eye,
+    EyeOff
 } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
-import axios from 'axios';
 import SideMenu from '../components/SideMenu';
+import TopBar from '../components/TopBar';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import Swal from 'sweetalert2';
 
 const API_BASE =
@@ -45,15 +38,12 @@ const API_BASE =
         ? 'https://namsterbackend-3.onrender.com'
         : 'http://localhost:3001');
 
-// Custom SweetAlert configuration following design system
 const swalConfig = {
     customClass: {
-        popup: 'rounded-[32px] border border-gray-100 dark:border-white/10 shadow-2xl bg-white dark:bg-slate-900',
-        title: 'text-2xl font-black text-gray-900 dark:text-white',
-        htmlContainer: 'text-sm font-medium text-gray-600 dark:text-gray-400',
-        confirmButton: 'px-8 py-4 bg-primary text-white rounded-2xl font-black shadow-xl shadow-primary/20 hover:scale-105 transition-all',
-        cancelButton: 'px-8 py-4 bg-gray-100 dark:bg-white/5 text-gray-700 dark:text-gray-300 rounded-2xl font-black hover:bg-gray-200 dark:hover:bg-white/10 transition-all',
-        actions: 'gap-3'
+        popup: 'dark:bg-slate-900 dark:text-white rounded-3xl border border-white/10',
+        title: 'text-2xl font-black tracking-tight',
+        confirmButton: 'bg-primary hover:bg-primary/90 px-8 py-3 rounded-xl font-bold transition-all',
+        cancelButton: 'bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 px-8 py-3 rounded-xl font-bold transition-all text-gray-900 dark:text-white'
     },
     buttonsStyling: false,
     showClass: {
@@ -71,7 +61,13 @@ const AdminDashboard = () => {
     const [visitors, setVisitors] = useState([]);
     const [feedbacks, setFeedbacks] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(localStorage.getItem('sidebarCollapsed') === 'true');
+
+    const handleToggleSidebar = (val) => {
+        setIsCollapsed(val);
+        localStorage.setItem('sidebarCollapsed', val);
+    };
+
     const [searchTerm, setSearchTerm] = useState('');
     const [replyingTo, setReplyingTo] = useState(null);
     const [replyText, setReplyText] = useState('');
@@ -99,88 +95,25 @@ const AdminDashboard = () => {
             setUsers(uRes.data);
             setVisitors(vRes.data);
             setFeedbacks(fRes.data);
-        } catch (err) {
-            console.error(err);
-        } finally {
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching admin data:', error);
             setLoading(false);
         }
     };
 
     useEffect(() => {
         fetchData();
-        const interval = setInterval(fetchData, 10000); // Auto-refresh every 10 seconds
-        return () => clearInterval(interval);
     }, []);
-
-    const handleReply = async (e) => {
-        e.preventDefault();
-        if (!replyText || !replyingTo) return;
-        setSendingReply(true);
-        try {
-            const token = localStorage.getItem('token');
-            await axios.post(`${API_BASE}/api/admin/feedback/${replyingTo._id}/respond`,
-                { response: replyText },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            setReplyingTo(null);
-            setReplyText('');
-            fetchData();
-            Swal.fire({
-                ...swalConfig,
-                icon: 'success',
-                title: 'RÃ©ponse envoyÃ©e',
-                text: 'Votre rÃ©ponse a Ã©tÃ© envoyÃ©e avec succÃ¨s.',
-                timer: 2000,
-                showConfirmButton: false
-            });
-        } catch (err) {
-            console.error(err);
-            Swal.fire({
-                ...swalConfig,
-                icon: 'error',
-                title: 'Erreur',
-                text: 'Impossible d\'envoyer la rÃ©ponse.',
-            });
-        } finally {
-            setSendingReply(false);
-        }
-    };
-
-    const handleExportCSV = () => {
-        if (!users.length) return;
-        const headers = ['ID', 'First Name', 'Last Name', 'Email', 'Role', 'Premium', 'Banned', 'Created At'];
-        const csvContent = [
-            headers.join(','),
-            ...users.map(u => [
-                u._id,
-                u.firstName,
-                u.lastName,
-                u.email,
-                u.role,
-                u.isPremium ? 'Yes' : 'No',
-                u.isBanned ? 'Yes' : 'No',
-                new Date(u.createdAt).toISOString()
-            ].join(','))
-        ].join('\n');
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `namster_users_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
 
     const handleDeleteUser = async (userId) => {
         const result = await Swal.fire({
             ...swalConfig,
-            title: 'ÃŠtes-vous sÃ»r ?',
-            text: "Cette action est irrÃ©versible !",
+            title: 'Supprimer cet utilisateur ?',
+            text: "Cette action est irréversible !",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Oui, supprimer !',
+            confirmButtonText: 'Oui, supprimer',
             cancelButtonText: 'Annuler'
         });
 
@@ -190,282 +123,208 @@ const AdminDashboard = () => {
                 await axios.delete(`${API_BASE}/api/admin/users/${userId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                setUsers(users.filter(u => u._id !== userId));
-                fetchData(); // Refresh stats
-                Swal.fire({
-                    ...swalConfig,
-                    icon: 'success',
-                    title: 'SupprimÃ© !',
-                    text: 'L\'utilisateur a Ã©tÃ© supprimÃ©.',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-            } catch (err) {
-                console.error(err);
-                Swal.fire({
-                    ...swalConfig,
-                    icon: 'error',
-                    title: 'Erreur',
-                    text: 'Une erreur est survenue lors de la suppression.'
-                });
+                Swal.fire({ ...swalConfig, icon: 'success', title: 'Supprimé !' });
+                fetchData();
+            } catch (error) {
+                Swal.fire({ ...swalConfig, icon: 'error', title: 'Erreur', text: 'Impossible de supprimer l\'utilisateur' });
             }
         }
     };
 
-    const handleTogglePremium = async (targetUser) => {
-        const action = targetUser.isPremium ? 'retirer' : 'ajouter';
-        const result = await Swal.fire({
-            ...swalConfig,
-            title: `Confirmer l'action`,
-            text: `Voulez-vous vraiment ${action} le statut Premium pour cet utilisateur ?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: `Oui, ${action} !`,
-            cancelButtonText: 'Annuler'
-        });
-
-        if (result.isConfirmed) {
-            try {
-                const token = localStorage.getItem('token');
-                const newStatus = !targetUser.isPremium;
-                const res = await axios.patch(`${API_BASE}/api/admin/users/${targetUser._id}/status`,
-                    { isPremium: newStatus },
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-                setUsers(users.map(u => u._id === targetUser._id ? res.data : u));
-                Swal.fire({
-                    ...swalConfig,
-                    icon: 'success',
-                    title: 'SuccÃ¨s !',
-                    text: `Le statut Premium a Ã©tÃ© ${newStatus ? 'ajoutÃ©' : 'retirÃ©'} avec succÃ¨s.`,
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-            } catch (err) {
-                console.error(err);
-                Swal.fire({
-                    ...swalConfig,
-                    icon: 'error',
-                    title: 'Erreur',
-                    text: 'Impossible de modifier le statut Premium.'
-                });
-            }
-        }
-    };
-
-    const openEditModal = (user) => {
-        setEditingUser(user);
+    const handleEditClick = (userToEdit) => {
+        setEditingUser(userToEdit);
         setEditForm({
-            firstName: user.firstName || '',
-            lastName: user.lastName || '',
-            email: user.email || '',
-            role: user.role || 'user'
+            firstName: userToEdit.firstName,
+            lastName: userToEdit.lastName,
+            email: userToEdit.email,
+            role: userToEdit.role
         });
     };
 
     const handleUpdateUser = async (e) => {
         e.preventDefault();
-        if (!editingUser) return;
         setIsSubmittingEdit(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.put(`${API_BASE}/api/admin/users/${editingUser._id}`,
-                editForm,
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            setUsers(users.map(u => u._id === editingUser._id ? res.data : u));
+            await axios.put(`${API_BASE}/api/admin/users/${editingUser._id}`, editForm, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            Swal.fire({ ...swalConfig, icon: 'success', title: 'Mis à jour !', timer: 1500, showConfirmButton: false });
             setEditingUser(null);
-            Swal.fire({
-                ...swalConfig,
-                icon: 'success',
-                title: 'Mis Ã  jour !',
-                text: 'Les informations de l\'utilisateur ont Ã©tÃ© mises Ã  jour.',
-                timer: 2000,
-                showConfirmButton: false
-            });
-        } catch (err) {
-            console.error(err);
-            Swal.fire({
-                ...swalConfig,
-                icon: 'error',
-                title: 'Erreur',
-                text: 'Impossible de mettre Ã  jour l\'utilisateur.'
-            });
+            fetchData();
+        } catch (error) {
+            Swal.fire({ ...swalConfig, icon: 'error', title: 'Erreur', text: error.response?.data?.message || 'Erreur lors de la mise à jour' });
         } finally {
             setIsSubmittingEdit(false);
         }
     };
 
-
-
-    const statCards = [
-        { label: 'Utilisateurs', val: stats.users, icon: <Users className="w-5 h-5" />, trend: '+12%', color: 'text-blue-500', bg: 'bg-blue-500/10' },
-        { label: 'Visiteurs Uniques', val: stats.visitors, icon: <MousePointer2 className="w-5 h-5" />, trend: '+5%', color: 'text-purple-500', bg: 'bg-purple-500/10' },
-        { label: 'Visites Totales', val: stats.totalVisits, icon: <Activity className="w-5 h-5" />, trend: '+18%', color: 'text-green-500', bg: 'bg-green-500/10' },
-        { label: 'Feedbacks Attente', val: stats.pendingFeedback, icon: <MessageSquare className="w-5 h-5" />, trend: '-3', color: 'text-orange-500', bg: 'bg-orange-500/10' },
-    ];
+    const handleSendReply = async () => {
+        if (!replyText.trim()) return;
+        setSendingReply(true);
+        try {
+            const token = localStorage.getItem('token');
+            await axios.post(`${API_BASE}/api/admin/feedbacks/${replyingTo._id}/reply`, { reply: replyText }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            Swal.fire({ ...swalConfig, icon: 'success', title: 'Réponse envoyée !', timer: 1500, showConfirmButton: false });
+            setReplyingTo(null);
+            setReplyText('');
+            fetchData();
+        } catch (error) {
+            Swal.fire({ ...swalConfig, icon: 'error', title: 'Erreur', text: 'Impossible d\'envoyer la réponse' });
+        } finally {
+            setSendingReply(false);
+        }
+    };
 
     const filteredUsers = users.filter(u =>
-        u.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        `${u.firstName} ${u.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const { t } = useTranslation();
+
+    if (loading) {
+        return (
+            <div className="min-h-screen dashboard-bg flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                    <p className="text-gray-500 font-bold animate-pulse">Chargement de l'administration...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen dashboard-bg flex transition-all duration-300">
-            <SideMenu isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+            <SideMenu isCollapsed={isCollapsed} setIsCollapsed={handleToggleSidebar} />
 
-            <main className={`flex-1 transition-all duration-300 p-6 md:p-8 ml-0 ${isCollapsed ? 'lg:ml-20' : 'lg:ml-[280px]'}`}>
+            <main className={`flex-1 flex flex-col transition-all duration-300 p-6 md:p-10 ml-0 pt-32 ${isCollapsed ? 'lg:ml-[80px]' : 'lg:ml-[280px]'}`}>
+                <TopBar isCollapsed={isCollapsed} />
                 {/* Header Section */}
                 <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10">
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                     >
-                        <div className="flex items-center gap-2 px-3 py-1 bg-gray-900 text-white rounded-full w-fit mb-3 border border-gray-900/10 shadow-lg shadow-gray-900/10">
-                            <ShieldAlert className="w-3.5 h-3.5 text-primary" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Zone Administrateur â€¢ Live</span>
+                        <div className="flex items-center gap-3 text-primary font-bold text-sm mb-2 opacity-80 uppercase tracking-widest">
+                            <Shield className="w-4 h-4" />
+                            Admin Space
                         </div>
-                        <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3 leading-tight">
-                            Console de Gestion
-                        </h1>
-                        <p className="text-gray-500 dark:text-gray-400 font-medium mt-1">GÃ©rez votre plateforme et rÃ©pondez aux utilisateurs.</p>
+                        <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">Panneau de Contrôle</h1>
                     </motion.div>
 
-                    <div className="flex items-center gap-3 w-full lg:w-auto">
-                        <button onClick={handleExportCSV} className="flex-1 lg:flex-none px-6 py-4 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 transition-all flex items-center justify-center gap-2 shadow-sm">
-                            <Download className="w-5 h-5" />
-                            Export CSV
-                        </button>
+                    <div className="flex items-center gap-4 w-full lg:w-auto">
+                        <div className="relative flex-1 lg:w-80 group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Rechercher un utilisateur..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-12 pr-4 py-4 bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium outline-hidden shadow-sm"
+                            />
+                        </div>
                     </div>
                 </header>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                    {statCards.map((card, i) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                    {[
+                        { label: 'Utilisateurs', value: stats.users, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+                        { label: 'Visiteurs Unique', value: stats.visitors, icon: UserPlus, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+                        { label: 'Sessions Total', value: stats.totalVisits, icon: TrendingUp, color: 'text-green-500', bg: 'bg-green-500/10' },
+                        { label: 'Feedbacks', value: stats.pendingFeedback, icon: MessageSquare, color: 'text-orange-500', bg: 'bg-orange-500/10' }
+                    ].map((stat, idx) => (
                         <motion.div
-                            key={i}
+                            key={idx}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.1 }}
-                            className="bg-white dark:bg-white/5 p-6 rounded-[32px] border border-gray-100 dark:border-white/10 shadow-xs hover:shadow-xl hover:shadow-gray-200/40 dark:hover:shadow-none transition-all relative overflow-hidden group cursor-default"
+                            transition={{ delay: idx * 0.1 }}
+                            className="bg-white dark:bg-white/5 p-6 rounded-3xl border border-gray-100 dark:border-white/10 shadow-sm hover:shadow-md transition-all group"
                         >
-                            <div className="flex justify-between items-start mb-4 relative z-10">
-                                <div className={`w-12 h-12 ${card.bg} ${card.color} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                    {card.icon}
+                            <div className="flex items-center justify-between mb-4">
+                                <div className={`p-3 rounded-2xl ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform`}>
+                                    <stat.icon className="w-6 h-6" />
                                 </div>
-                                <div className={`flex items-center gap-1 text-[10px] font-black px-2 py-1 rounded-lg ${card.trend.startsWith('+') ? 'text-green-500 bg-green-50 dark:bg-green-500/10' : 'text-red-500 bg-red-50 dark:bg-red-500/10'}`}>
-                                    {card.trend.startsWith('+') ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                                    {card.trend}
-                                </div>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Total</span>
                             </div>
-                            <div className="relative z-10">
-                                <p className="text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">{card.label}</p>
-                                <p className="text-3xl font-black text-gray-900 dark:text-white">{card.val}</p>
-                            </div>
+                            <div className="text-3xl font-black text-gray-900 dark:text-white mb-1 tracking-tight">{stat.value}</div>
+                            <div className="text-sm font-bold text-gray-500 dark:text-gray-400">{stat.label}</div>
                         </motion.div>
                     ))}
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    {/* User Management Section */}
-                    <div className="lg:col-span-12 space-y-8">
-                        <section className="bg-white dark:bg-white/5 rounded-[40px] border border-gray-100 dark:border-white/10 shadow-sm overflow-hidden">
-                            <div className="p-8 border-b border-gray-50 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-                                <div>
-                                    <h3 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
-                                        <Users className="w-6 h-6 text-primary" />
-                                        Utilisateurs EnregistrÃ©s
-                                    </h3>
-                                    <p className="text-sm text-gray-400 dark:text-gray-500 font-medium">Liste complÃ¨te des membres de Namster</p>
-                                </div>
-                                <div className="flex gap-2 w-full sm:w-auto">
-                                    <div className="relative flex-1 sm:flex-none">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
-                                        <input
-                                            type="text"
-                                            placeholder="Trouver un membre..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="pl-10 pr-4 py-3 bg-gray-50 dark:bg-white/5 border-none rounded-xl text-sm font-medium outline-hidden focus:ring-2 focus:ring-primary/20 w-full lg:w-80 text-gray-900 dark:text-white"
-                                        />
-                                    </div>
-                                    <button className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-400 transition-colors"><Filter className="w-5 h-5" /></button>
-                                </div>
+                {/* Main Content Sections */}
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    {/* Users Table */}
+                    <div className="xl:col-span-2 space-y-6">
+                        <div className="bg-white dark:bg-white/5 rounded-3xl border border-gray-100 dark:border-white/10 overflow-hidden shadow-sm">
+                            <div className="p-6 border-b border-gray-100 dark:border-white/10 flex justify-between items-center">
+                                <h3 className="font-black text-xl text-gray-900 dark:text-white flex items-center gap-3">
+                                    <User className="w-5 h-5 text-primary" />
+                                    Gestion des Comptes
+                                </h3>
+                                <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] font-black rounded-full tracking-widest uppercase">
+                                    {filteredUsers.length} Inscrits
+                                </span>
                             </div>
-
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left">
+                                <table className="w-full">
                                     <thead>
-                                        <tr className="bg-[#FBFCFD] dark:bg-white/5 text-gray-400 dark:text-gray-500 text-[10px] font-black uppercase tracking-widest border-b border-gray-50 dark:border-white/10">
-                                            <th className="px-8 py-5">Utilisateur</th>
-                                            <th className="px-8 py-5">Status / RÃ´le</th>
-                                            <th className="px-8 py-5">ActivitÃ©</th>
-                                            <th className="px-8 py-5">Action</th>
+                                        <tr className="text-left bg-gray-50 dark:bg-white/2">
+                                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Utilisateur</th>
+                                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Role</th>
+                                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Statut</th>
+                                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-50 dark:divide-white/10">
-                                        {filteredUsers.map((u, i) => (
-                                            <tr key={u._id} className="hover:bg-gray-50/40 dark:hover:bg-white/5 transition-colors group">
-                                                <td className="px-8 py-6">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-12 h-12 rounded-2xl bg-gray-900 text-white flex items-center justify-center font-black text-sm shadow-xl shadow-gray-900/10 group-hover:scale-105 transition-transform">
-                                                            {(u.firstName?.[0] || '?')}{(u.lastName?.[0] || '')}
+                                    <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                                        {filteredUsers.map((u) => (
+                                            <tr key={u._id} className="hover:bg-gray-50 dark:hover:bg-white/2 transition-colors group">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary font-black overflow-hidden border border-primary/20">
+                                                            {u.avatar ? <img src={u.avatar} className="w-full h-full object-cover" /> : (u.firstName?.[0] || 'U')}
                                                         </div>
                                                         <div>
-                                                            <p className="text-sm font-black text-gray-900 dark:text-white">{u.firstName} {u.lastName}</p>
-                                                            <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">{u.email}</p>
+                                                            <div className="font-black text-gray-900 dark:text-white text-sm">
+                                                                {u.firstName} {u.lastName}
+                                                            </div>
+                                                            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">{u.email}</div>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-8 py-6">
-                                                    <div className="flex flex-col gap-1">
-                                                        <span className={`w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${u.isPremium ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400'}`}>
-                                                            {u.isPremium ? 'Premium' : 'Standard'}
-                                                        </span>
-                                                        {u.role === 'admin' && (
-                                                            <span className="text-[9px] text-primary font-bold flex items-center gap-1">
-                                                                <ShieldAlert className="w-2.5 h-2.5" /> Chef de Projet
-                                                            </span>
-                                                        )}
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-tighter ${u.role === 'admin' ? 'bg-red-500/10 text-red-500' : 'bg-blue-500/10 text-blue-500'
+                                                        }`}>
+                                                        {u.role}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-1.5 text-green-500">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-current"></div>
+                                                        <span className="text-[10px] font-black uppercase">Actif</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-8 py-6">
-                                                    <div className="flex items-center gap-2 text-xs font-bold text-gray-600 dark:text-gray-400">
-                                                        <Clock className="w-4 h-4 text-gray-300 dark:text-gray-600" />
-                                                        {new Date(u.createdAt).toLocaleDateString()}
-                                                    </div>
-                                                </td>
-                                                <td className="px-8 py-6">
-                                                    <div className="flex items-center gap-2">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <button
                                                             onClick={() => setViewingUser(u)}
-                                                            className="p-2.5 bg-green-50 text-green-500 rounded-xl hover:bg-green-500 hover:text-white transition-all"
-                                                            title="Voir dÃ©tails"
+                                                            className="p-2 hover:bg-white dark:hover:bg-white/10 rounded-xl text-gray-500 hover:text-primary transition-all border border-transparent hover:border-primary/20"
                                                         >
                                                             <Eye className="w-4 h-4" />
                                                         </button>
-
                                                         <button
-                                                            onClick={() => handleTogglePremium(u)}
-                                                            className={`p-2.5 rounded-xl transition-all ${u.isPremium ? 'bg-amber-100 text-amber-600 hover:bg-amber-200' : 'bg-gray-100 text-gray-400 hover:bg-amber-50 hover:text-amber-500'}`}
-                                                            title={u.isPremium ? "Retirer Premium" : "Passer Premium"}
+                                                            onClick={() => handleEditClick(u)}
+                                                            className="p-2 hover:bg-white dark:hover:bg-white/10 rounded-xl text-gray-500 hover:text-blue-500 transition-all border border-transparent hover:border-blue-500/20"
                                                         >
-                                                            <Zap className={`w-4 h-4 ${u.isPremium ? 'fill-current' : ''}`} />
+                                                            <Edit2 className="w-4 h-4" />
                                                         </button>
-
-                                                        <button
-                                                            onClick={() => openEditModal(u)}
-                                                            className="p-2.5 bg-blue-50 text-blue-500 rounded-xl hover:bg-blue-500 hover:text-white transition-all"
-                                                            title="Ã‰diter l'utilisateur"
-                                                        >
-                                                            <Pencil className="w-4 h-4" />
-                                                        </button>
-
                                                         <button
                                                             onClick={() => handleDeleteUser(u._id)}
-                                                            className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"
-                                                            title="Supprimer l'utilisateur"
+                                                            className="p-2 hover:bg-white dark:hover:bg-white/10 rounded-xl text-gray-500 hover:text-red-500 transition-all border border-transparent hover:border-red-500/20"
                                                         >
                                                             <Trash2 className="w-4 h-4" />
                                                         </button>
@@ -476,409 +335,283 @@ const AdminDashboard = () => {
                                     </tbody>
                                 </table>
                             </div>
-                        </section>
+                        </div>
 
-                        <section className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                            {/* Feedback Management */}
-                            <div className="lg:col-span-3 bg-white dark:bg-slate-900 rounded-[40px] border border-gray-100 dark:border-white/10 shadow-sm overflow-hidden text-gray-900 dark:text-white">
-                                <div className="p-8 border-b border-gray-50 dark:border-white/5">
-                                    <h3 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
-                                        <MessageSquare className="w-6 h-6 text-orange-500" />
-                                        Feedbacks Clients
-                                    </h3>
-                                    <p className="text-sm text-gray-400 dark:text-gray-500 font-medium tracking-tight">RÃ©pondez aux demandes des utilisateurs</p>
-                                </div>
-
-                                <div className="divide-y divide-gray-50 dark:divide-white/5 p-4 max-h-[600px] overflow-y-auto">
-                                    {feedbacks.length > 0 ? feedbacks.map((fb) => (
-                                        <div key={fb._id} className="p-6 hover:bg-gray-50/50 dark:hover:bg-white/5 rounded-3xl transition-all">
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-black text-xs">
-                                                        {fb.name?.[0]}
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-black text-gray-900 dark:text-white">{fb.name}</p>
-                                                        <p className="text-[10px] text-gray-400 dark:text-gray-500 font-bold">{fb.email}</p>
-                                                    </div>
-                                                </div>
-                                                <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${fb.status === 'replied' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'}`}>
-                                                    {fb.status === 'replied' ? 'DÃ©jÃ  rÃ©pondu' : 'Prioritaire'}
-                                                </span>
+                        {/* Recent Visitors */}
+                        <div className="bg-white dark:bg-white/5 rounded-3xl border border-gray-100 dark:border-white/10 p-6 shadow-sm">
+                            <h3 className="font-black text-xl text-gray-900 dark:text-white mb-6 flex items-center gap-3">
+                                <TrendingUp className="w-5 h-5 text-purple-500" />
+                                Trafic Récent
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {visitors.slice(0, 6).map((v, idx) => (
+                                    <div key={idx} className="p-4 bg-gray-50 dark:bg-white/2 rounded-2xl border border-gray-100 dark:border-white/5">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="p-2 bg-purple-500/10 text-purple-500 rounded-lg">
+                                                <Globe className="w-4 h-4" />
                                             </div>
-                                            <div className="bg-white dark:bg-white/5 p-4 rounded-2xl border border-gray-100 dark:border-white/5 shadow-xs mb-4">
-                                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 italic">"{fb.message}"</p>
-                                            </div>
-
-                                            {fb.status === 'replied' ? (
-                                                <div className="pl-6 border-l-2 border-primary/20 space-y-2 text-gray-900 dark:text-white">
-                                                    <p className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                                                        <Reply className="w-3 h-3" /> Votre rÃ©ponse :
-                                                    </p>
-                                                    <p className="text-xs font-bold text-gray-500 dark:text-gray-400 bg-primary/5 dark:bg-primary/10 p-3 rounded-xl">{fb.response}</p>
-                                                </div>
-                                            ) : (
-                                                <button
-                                                    onClick={() => setReplyingTo(fb)}
-                                                    className="w-full py-3 bg-primary text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
-                                                >
-                                                    <Reply className="w-4 h-4 text-white" /> RÃ©pondre maintenant
-                                                </button>
-                                            )}
+                                            <div className="text-[10px] font-black text-gray-400 uppercase truncate">{v.ip}</div>
                                         </div>
-                                    )) : (
-                                        <div className="px-8 py-20 text-center text-gray-400 dark:text-gray-500 font-bold italic">Aucun feedback disponible.</div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Server & Side Info */}
-                            <div className="lg:col-span-2 space-y-8">
-                                <div className="bg-gray-900 rounded-[40px] p-8 text-white shadow-2xl relative overflow-hidden group">
-                                    <h3 className="text-xl font-black mb-10 flex items-center gap-3">
-                                        <Server className="w-6 h-6 text-primary" />
-                                        Infrastructure
-                                    </h3>
-
-                                    <div className="space-y-10">
-                                        <div className="space-y-4">
-                                            <div className="flex justify-between items-center text-xs">
-                                                <span className="font-bold text-gray-400">Database Uptime</span>
-                                                <span className="text-green-400 font-black">100%</span>
-                                            </div>
-                                            <div className="w-full bg-white/5 h-2.5 rounded-full overflow-hidden">
-                                                <motion.div initial={{ width: 0 }} animate={{ width: '98%' }} className="bg-primary h-full" />
-                                            </div>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="p-4 bg-white/5 rounded-2xl">
-                                                <p className="text-[10px] font-black text-gray-500 uppercase mb-1">CPU</p>
-                                                <p className="text-xl font-black">14%</p>
-                                            </div>
-                                            <div className="p-4 bg-white/5 rounded-2xl">
-                                                <p className="text-[10px] font-black text-gray-500 uppercase mb-1">RAM</p>
-                                                <p className="text-xl font-black">1.8GB</p>
-                                            </div>
+                                        <div className="flex items-center justify-between">
+                                            <div className="text-xs font-bold text-gray-700 dark:text-gray-300">{v.browser}</div>
+                                            <div className="text-[10px] text-gray-500 font-medium">{new Date(v.lastVisit).toLocaleDateString()}</div>
                                         </div>
                                     </div>
-                                    <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-primary/5 rounded-full blur-3xl" />
-                                </div>
-
-                                <div className="bg-white dark:bg-slate-900 rounded-[40px] p-8 border border-gray-100 dark:border-white/10 shadow-sm">
-                                    <h3 className="text-xl font-black text-gray-900 dark:text-white mb-6 flex items-center gap-3">
-                                        <Globe className="w-6 h-6 text-purple-600" />
-                                        Visiteurs (Top 10)
-                                    </h3>
-                                    <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
-                                        {visitors.slice(0, 10).map((v, i) => (
-                                            <div key={i} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/5 rounded-2xl">
-                                                <div className="overflow-hidden">
-                                                    <p className="text-xs font-black text-gray-900 dark:text-white truncate">{v.ip}</p>
-                                                    <p className="text-[9px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-tighter">Namster User</p>
-                                                </div>
-                                                <span className="text-xs font-black bg-primary text-white px-3 py-1 rounded-xl shadow-sm shadow-primary/20">{v.visitCount}v</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+                                ))}
                             </div>
-                        </section>
+                        </div>
+                    </div>
+
+                    {/* Feedbacks Column */}
+                    <div className="space-y-6">
+                        <div className="bg-white dark:bg-white/5 rounded-3xl border border-gray-100 dark:border-white/10 p-6 shadow-sm">
+                            <h3 className="font-black text-xl text-gray-900 dark:text-white mb-6 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <MessageSquare className="w-5 h-5 text-orange-500" />
+                                    Feedbacks
+                                </div>
+                                <span className="w-6 h-6 bg-orange-500/10 text-orange-500 rounded-lg flex items-center justify-center text-[10px] font-black">
+                                    {feedbacks.filter(f => !f.isRead).length}
+                                </span>
+                            </h3>
+                            <div className="space-y-4">
+                                {feedbacks.length === 0 ? (
+                                    <div className="text-center py-10 opacity-40">
+                                        <MessageSquare className="w-12 h-12 mx-auto mb-3" />
+                                        <p className="text-sm font-bold tracking-tight">Aucun feedback</p>
+                                    </div>
+                                ) : feedbacks.map((f) => (
+                                    <div
+                                        key={f._id}
+                                        className={`p-5 rounded-2xl border transition-all ${f.replied ? 'bg-gray-50/50 dark:bg-white/2 border-gray-100 dark:border-white/5 opacity-60' : 'bg-orange-50/30 dark:bg-orange-500/5 border-orange-200/50 dark:border-orange-500/20'
+                                            }`}
+                                    >
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div className="font-black text-sm text-gray-900 dark:text-white">{f.name}</div>
+                                            <div className="text-[10px] font-medium text-gray-400">{new Date(f.createdAt).toLocaleDateString()}</div>
+                                        </div>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-4 line-clamp-3 leading-relaxed">{f.message}</p>
+                                        {!f.replied && (
+                                            <button
+                                                onClick={() => setReplyingTo(f)}
+                                                className="w-full py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                                            >
+                                                Répondre
+                                                <ArrowRight className="w-3 h-3" />
+                                            </button>
+                                        )}
+                                        {f.replied && (
+                                            <div className="flex items-center gap-2 text-green-500 text-[10px] font-black uppercase">
+                                                <CheckCircle className="w-3 h-3" />
+                                                Déjà traité
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                {/* Reply Modal */}
-                <AnimatePresence>
-                    {replyingTo && (
-                        <>
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                onClick={() => setReplyingTo(null)}
-                                className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[1000]"
-                            />
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white dark:bg-slate-900 rounded-[40px] shadow-2xl z-[1001] p-10 border border-gray-100 dark:border-white/10"
-                            >
-                                <div className="flex justify-between items-start mb-8">
-                                    <div className="w-14 h-14 bg-orange-100 dark:bg-orange-900/30 rounded-2xl flex items-center justify-center">
-                                        <MessageSquare className="w-8 h-8 text-orange-500" />
-                                    </div>
-                                    <button onClick={() => setReplyingTo(null)} className="p-2 text-gray-300 dark:text-gray-600 hover:text-gray-900 dark:hover:text-white transition-colors">
-                                        <X className="w-6 h-6" />
-                                    </button>
-                                </div>
-
-                                <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-2">RÃ©pondre Ã  {replyingTo.name}</h3>
-                                <div className="bg-gray-50 dark:bg-white/5 p-6 rounded-2xl border border-gray-100 dark:border-white/5 mb-8 italic text-sm text-gray-500 dark:text-gray-400 font-medium">
-                                    "{replyingTo.message}"
-                                </div>
-
-                                <form onSubmit={handleReply} className="space-y-6">
-                                    <div>
-                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1 mb-2 block">Votre rÃ©ponse officielle</label>
-                                        <textarea
-                                            value={replyText}
-                                            onChange={(e) => setReplyText(e.target.value)}
-                                            className="w-full h-40 bg-gray-50 dark:bg-white/5 border-none rounded-3xl p-6 outline-hidden focus:ring-2 focus:ring-primary/20 text-sm font-bold resize-none text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600"
-                                            placeholder="Ã‰crivez votre message ici..."
-                                            required
-                                        />
-                                    </div>
-                                    <button
-                                        type="submit"
-                                        disabled={sendingReply || !replyText}
-                                        className="w-full py-5 bg-primary text-white rounded-2xl font-black flex items-center justify-center gap-3 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
-                                    >
-                                        {sendingReply ? 'Envoi...' : 'Envoyer la rÃ©ponse'}
-                                        <Send className="w-5 h-5" />
-                                    </button>
-                                </form>
-                            </motion.div>
-                        </>
-                    )}
-                </AnimatePresence>
-
-                {/* Edit User Modal */}
-                <AnimatePresence>
-                    {editingUser && (
-                        <>
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                onClick={() => setEditingUser(null)}
-                                className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[1000]"
-                            />
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white dark:bg-slate-900 rounded-[40px] shadow-2xl z-[1001] p-10 border border-gray-100 dark:border-white/10"
-                            >
-                                <div className="flex justify-between items-start mb-8">
-                                    <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center">
-                                        <Pencil className="w-8 h-8 text-blue-500" />
-                                    </div>
-                                    <button onClick={() => setEditingUser(null)} className="p-2 text-gray-300 dark:text-gray-600 hover:text-gray-900 dark:hover:text-white transition-colors">
-                                        <X className="w-6 h-6" />
-                                    </button>
-                                </div>
-
-                                <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Modifier l'utilisateur</h3>
-                                <p className="text-gray-400 dark:text-gray-500 text-sm font-medium mb-8">Changez les informations du profil ci-dessous.</p>
-
-                                <form onSubmit={handleUpdateUser} className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1 mb-2 block">PrÃ©nom</label>
-                                            <input
-                                                type="text"
-                                                value={editForm.firstName}
-                                                onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
-                                                className="w-full bg-gray-50 dark:bg-white/5 border-none rounded-xl p-4 outline-hidden focus:ring-2 focus:ring-blue-500/20 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600"
-                                                placeholder="PrÃ©nom"
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1 mb-2 block">Nom</label>
-                                            <input
-                                                type="text"
-                                                value={editForm.lastName}
-                                                onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
-                                                className="w-full bg-gray-50 dark:bg-white/5 border-none rounded-xl p-4 outline-hidden focus:ring-2 focus:ring-blue-500/20 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600"
-                                                placeholder="Nom"
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1 mb-2 block">Email</label>
-                                        <input
-                                            type="email"
-                                            value={editForm.email}
-                                            onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                                            className="w-full bg-gray-50 dark:bg-white/5 border-none rounded-xl p-4 outline-hidden focus:ring-2 focus:ring-blue-500/20 text-sm font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600"
-                                            placeholder="exemple@email.com"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1 mb-2 block">RÃ´le</label>
-                                        <select
-                                            value={editForm.role}
-                                            onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                                            className="w-full bg-gray-50 dark:bg-white/5 border-none rounded-xl p-4 outline-hidden focus:ring-2 focus:ring-blue-500/20 text-sm font-bold appearance-none cursor-pointer text-gray-900 dark:text-white"
-                                        >
-                                            <option value="user">Utilisateur Standard</option>
-                                            <option value="admin">Administrateur</option>
-                                        </select>
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        disabled={isSubmittingEdit}
-                                        className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black flex items-center justify-center gap-3 shadow-xl shadow-blue-600/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 mt-6"
-                                    >
-                                        {isSubmittingEdit ? 'Enregistrement...' : 'Enregistrer les modifications'}
-                                        <Save className="w-5 h-5" />
-                                    </button>
-                                </form>
-                            </motion.div>
-                        </>
-                    )}
-                </AnimatePresence>
-
-                {/* User Details Modal */}
-                <AnimatePresence>
-                    {viewingUser && (
-                        <>
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                onClick={() => setViewingUser(null)}
-                                className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[1000]"
-                            />
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[40px] shadow-2xl z-[1001] p-10 border border-gray-100 dark:border-white/10 max-h-[90vh] overflow-y-auto"
-                            >
-                                <div className="flex justify-between items-start mb-8">
-                                    <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center">
-                                        <Eye className="w-8 h-8 text-green-500" />
-                                    </div>
-                                    <button onClick={() => setViewingUser(null)} className="p-2 text-gray-300 dark:text-gray-600 hover:text-gray-900 dark:hover:text-white transition-colors">
-                                        <X className="w-6 h-6" />
-                                    </button>
-                                </div>
-
-                                <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-6">DÃ©tails de l'utilisateur</h3>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Nom complet</label>
-                                        <p className="text-sm font-bold text-gray-900 dark:text-white">{viewingUser.firstName} {viewingUser.lastName}</p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Email</label>
-                                        <p className="text-sm font-bold text-gray-900 dark:text-white">{viewingUser.email}</p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">RÃ´le</label>
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${viewingUser.role === 'admin' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400'}`}>
-                                            {viewingUser.role === 'admin' ? 'Administrateur' : 'Utilisateur'}
-                                        </span>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Statut</label>
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${viewingUser.isPremium ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400'}`}>
-                                            {viewingUser.isPremium ? 'Premium' : 'Standard'}
-                                        </span>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Date d'inscription</label>
-                                        <p className="text-sm font-bold text-gray-900 dark:text-white">{new Date(viewingUser.createdAt).toLocaleDateString()}</p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">DerniÃ¨re activitÃ©</label>
-                                        <p className="text-sm font-bold text-gray-900 dark:text-white">{new Date(viewingUser.updatedAt).toLocaleDateString()}</p>
-                                    </div>
-                                </div>
-
-                                <div className="border-t border-gray-100 dark:border-white/10 pt-6">
-                                    <h4 className="text-lg font-black text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                                        <Activity className="w-5 h-5 text-primary" />
-                                        Statistiques d'activitÃ©
-                                    </h4>
-                                    <div className="grid grid-cols-3 gap-4">
-                                        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-2xl text-center">
-                                            <p className="text-2xl font-black text-blue-600 dark:text-blue-400">
-                                                {(() => {
-                                                    let totalItems = 0;
-                                                    viewingUser.history?.forEach(h => {
-                                                        if (h.action === "generation" || h.action === "generate") {
-                                                            const match = h.details.match(/\d+/);
-                                                            if (match) {
-                                                                totalItems += parseInt(match[0]);
-                                                            } else {
-                                                                totalItems += 1;
-                                                            }
-                                                        }
-                                                    });
-                                                    return totalItems;
-                                                })()}
-                                            </p>
-                                            <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mt-1">Invitations</p>
-                                        </div>
-                                        <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-2xl text-center">
-                                            <p className="text-2xl font-black text-orange-600 dark:text-orange-400">
-                                                {viewingUser.history?.filter(h => h.action === "generation" || h.action === "generate").length || 0}
-                                            </p>
-                                            <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest mt-1">OpÃ©rations</p>
-                                        </div>
-                                        <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-2xl text-center">
-                                            <p className="text-2xl font-black text-green-600 dark:text-green-400">
-                                                {(() => {
-                                                    let totalItems = 0;
-                                                    viewingUser.history?.forEach(h => {
-                                                        if (h.action === "generation" || h.action === "generate") {
-                                                            const match = h.details.match(/\d+/);
-                                                            if (match) {
-                                                                totalItems += parseInt(match[0]);
-                                                            } else {
-                                                                totalItems += 1;
-                                                            }
-                                                        }
-                                                    });
-                                                    return Math.round(totalItems * 5 / 60);
-                                                })()}h
-                                            </p>
-                                            <p className="text-[10px] font-black text-green-400 uppercase tracking-widest mt-1">Temps Ã©conomisÃ©</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {viewingUser.history && viewingUser.history.length > 0 && (
-                                    <div className="border-t border-gray-100 dark:border-white/10 pt-6 mt-6">
-                                        <h4 className="text-lg font-black text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                                            <Clock className="w-5 h-5 text-primary" />
-                                            Historique rÃ©cent
-                                        </h4>
-                                        <div className="space-y-3 max-h-60 overflow-y-auto">
-                                            {viewingUser.history.slice(-5).reverse().map((h, i) => (
-                                                <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-white/5 rounded-2xl">
-                                                    <div className={`w-8 h-8 ${(h.action === 'generation' || h.action === 'generate') ? 'bg-blue-50 text-blue-500' : 'bg-green-50 text-green-500'} rounded-xl flex items-center justify-center`}>
-                                                        {(h.action === 'generation' || h.action === 'generate') ? <Zap className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <p className="text-xs font-black text-gray-900 dark:text-white">{h.details}</p>
-                                                        <p className="text-[9px] text-gray-400 dark:text-gray-500 font-bold uppercase">{new Date(h.timestamp).toLocaleDateString()} â€¢ {new Date(h.timestamp).toLocaleTimeString()}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </motion.div>
-                        </>
-                    )}
-                </AnimatePresence>
             </main>
+
+            {/* View User Modal */}
+            <AnimatePresence>
+                {viewingUser && (
+                    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setViewingUser(null)}
+                            className="absolute inset-0 bg-gray-900/60 backdrop-blur-md"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl overflow-hidden relative z-101 border border-white/10 shadow-2xl"
+                        >
+                            <div className="h-24 bg-linear-to-r from-primary to-accent"></div>
+                            <div className="px-8 pb-8">
+                                <div className="relative -mt-12 mb-6">
+                                    <div className="w-24 h-24 rounded-3xl bg-white dark:bg-slate-900 p-1.5 shadow-xl">
+                                        <div className="w-full h-full rounded-2xl bg-primary/20 flex items-center justify-center text-primary text-3xl font-black overflow-hidden">
+                                            {viewingUser.avatar ? <img src={viewingUser.avatar} className="w-full h-full object-cover" /> : viewingUser.firstName[0]}
+                                        </div>
+                                    </div>
+                                </div>
+                                <h4 className="text-2xl font-black text-gray-900 dark:text-white mb-1">
+                                    {viewingUser.firstName} {viewingUser.lastName}
+                                </h4>
+                                <p className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-6">{viewingUser.email}</p>
+
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-white/5 rounded-2xl">
+                                        <Shield className="w-5 h-5 text-primary" />
+                                        <div>
+                                            <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Role Système</div>
+                                            <div className="font-bold text-gray-900 dark:text-white uppercase">{viewingUser.role}</div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-white/5 rounded-2xl">
+                                        <Calendar className="w-5 h-5 text-blue-500" />
+                                        <div>
+                                            <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Inscrit le</div>
+                                            <div className="font-bold text-gray-900 dark:text-white">{new Date(viewingUser.createdAt).toLocaleDateString()}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Edit User Modal */}
+            <AnimatePresence>
+                {editingUser && (
+                    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setEditingUser(null)}
+                            className="absolute inset-0 bg-gray-900/60 backdrop-blur-md"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl p-8 relative z-101 border border-white/10 shadow-2xl"
+                        >
+                            <h4 className="text-2xl font-black text-gray-900 dark:text-white mb-6">Modifier le Compte</h4>
+                            <form onSubmit={handleUpdateUser} className="space-y-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Prénom</label>
+                                        <input
+                                            value={editForm.firstName}
+                                            onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                                            className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-primary/20 outline-hidden font-bold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Nom</label>
+                                        <input
+                                            value={editForm.lastName}
+                                            onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                                            className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-primary/20 outline-hidden font-bold"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Email</label>
+                                    <input
+                                        type="email"
+                                        value={editForm.email}
+                                        onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-primary/20 outline-hidden font-bold"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Role</label>
+                                    <select
+                                        value={editForm.role}
+                                        onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-primary/20 outline-hidden font-bold appearance-none"
+                                    >
+                                        <option value="user">Utilisateur Standard</option>
+                                        <option value="admin">Administrateur</option>
+                                    </select>
+                                </div>
+                                <div className="flex gap-4 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingUser(null)}
+                                        className="flex-1 py-4 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white rounded-2xl font-black uppercase text-xs tracking-widest border border-gray-100 dark:border-white/10"
+                                    >
+                                        Annuler
+                                    </button>
+                                    <button
+                                        disabled={isSubmittingEdit}
+                                        className="flex-1 py-4 bg-primary text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg shadow-primary/20 disabled:opacity-50"
+                                    >
+                                        {isSubmittingEdit ? 'Enregistrement...' : 'Sauvegarder'}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Reply Modal */}
+            <AnimatePresence>
+                {replyingTo && (
+                    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setReplyingTo(null)}
+                            className="absolute inset-0 bg-gray-900/60 backdrop-blur-md"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl p-8 relative z-101 border border-white/10 shadow-2xl"
+                        >
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center">
+                                    <MessageSquare className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h4 className="text-xl font-black text-gray-900 dark:text-white">Réponse à {replyingTo.name}</h4>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Support Client Namster</p>
+                                </div>
+                            </div>
+
+                            <div className="mb-6 p-4 bg-gray-50 dark:bg-white/2 rounded-2xl border border-gray-100 dark:border-white/5 italic text-sm text-gray-500">
+                                "{replyingTo.message}"
+                            </div>
+
+                            <textarea
+                                value={replyText}
+                                onChange={(e) => setReplyText(e.target.value)}
+                                placeholder="Votre message officiel de support..."
+                                className="w-full h-40 p-5 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-primary/20 outline-hidden font-medium text-sm mb-6 resize-none"
+                            />
+
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={() => setReplyingTo(null)}
+                                    className="flex-1 py-4 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white rounded-2xl font-black uppercase text-xs tracking-widest"
+                                >
+                                    Fermer
+                                </button>
+                                <button
+                                    onClick={handleSendReply}
+                                    disabled={sendingReply || !replyText.trim()}
+                                    className="flex-1 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {sendingReply ? 'Envoi...' : 'Transmettre'}
+                                    <ArrowRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
 
+// Add Globe icon import
+const Globe = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </svg>
+);
+
 export default AdminDashboard;
-
-
-
-

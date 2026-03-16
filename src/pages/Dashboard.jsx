@@ -25,9 +25,11 @@ import {
   Globe,
   CheckCircle,
   Settings2,
+  Camera,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import SideMenu from "../components/SideMenu";
+import TopBar from "../components/TopBar";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { templates } from "../data/templates";
@@ -36,8 +38,6 @@ const Dashboard = () => {
   const { t } = useTranslation();
   const { user, refreshUser } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -121,6 +121,28 @@ const Dashboard = () => {
     }
   };
 
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('avatar', file);
+    setIsSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data'
+      };
+      await axios.put(`${API_BASE}/api/user/profile/avatar`, formData, { headers });
+      await fetchDashboardData();
+      if (typeof refreshUser === 'function') await refreshUser();
+    } catch (err) {
+      console.error("Failed to upload avatar:", err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setIsSaving(true);
@@ -129,6 +151,7 @@ const Dashboard = () => {
       const headers = { Authorization: `Bearer ${token}` };
       await axios.put(`${API_BASE}/api/auth/profile`, editForm, { headers });
       await fetchDashboardData();
+      if (typeof refreshUser === 'function') await refreshUser();
       alert(t('dashboard.profile_updated_success'));
     } catch (err) {
       console.error("Failed to update profile:", err);
@@ -1011,7 +1034,7 @@ const Dashboard = () => {
                 className="bg-white dark:bg-white/5 rounded-[32px] border border-gray-100 dark:border-white/10 shadow-sm overflow-hidden group relative"
               >
                 <div
-                  className="aspect-[4/3] relative overflow-hidden flex items-center justify-center p-0"
+                  className="aspect-4/3 relative overflow-hidden flex items-center justify-center p-0"
                   style={{ background: tpl.bgStyle }}
                 >
                   {tpl.image ? (
@@ -1139,223 +1162,195 @@ const Dashboard = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-4xl space-y-8"
+      className="max-w-7xl mx-auto space-y-8"
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-1 space-y-4">
-          <h3 className="text-xl font-black text-gray-900 dark:text-white">{t('dashboard.my_profile')}</h3>
-          <p className="text-sm text-gray-400 font-medium">
-            {t('dashboard.profile_desc')}
-          </p>
-        </div>
-        <div className="md:col-span-2 bg-white dark:bg-white/5 p-8 rounded-[32px] border border-gray-100 dark:border-white/10 shadow-sm space-y-8 relative overflow-hidden">
-          {/* Subtle background element */}
-          <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pb-8 border-b border-gray-50 dark:border-white/10 relative z-10">
-            <div className="relative group">
-              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border-4 border-white dark:border-slate-800 shadow-xl transition-transform group-hover:scale-105">
-                {user?.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="w-10 h-10 text-primary" />
-                )}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+        {/* Profile Card */}
+        <div className="lg:col-span-8 bg-white dark:bg-white/5 p-8 rounded-[40px] border border-gray-100 dark:border-white/10 shadow-sm space-y-8 relative overflow-hidden flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                <User className="w-6 h-6" />
               </div>
-              <button
-                type="button"
-                onClick={() => avatarInputRef.current?.click()}
-                className="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-full font-bold text-xs transition-opacity backdrop-blur-sm cursor-pointer"
-              >
-                Upload
-              </button>
-              <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={(e) => alert("Avatar upload simulation. Backend endpoint needed.")} />
+              <h3 className="text-2xl font-black text-gray-900 dark:text-white">{t('dashboard.my_profile')}</h3>
             </div>
 
-            <div className="flex-1">
-              <h4 className="font-black text-gray-900 dark:text-white text-lg mb-1">{user?.firstName} {user?.lastName}</h4>
-              <p className="text-sm text-gray-400 font-medium mb-4">{user?.email}</p>
-              <div className="flex flex-wrap gap-3">
+            <div className="flex flex-col sm:flex-row items-center gap-8 pb-8 border-b border-gray-50 dark:border-white/10 relative z-10">
+              <div className="relative group shrink-0">
+                <div className="w-32 h-32 rounded-[32px] bg-primary/10 flex items-center justify-center overflow-hidden border-4 border-white dark:border-slate-800 shadow-2xl transition-all group-hover:scale-105 group-hover:rotate-2">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-12 h-12 text-primary" />
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={() => avatarInputRef.current?.click()}
-                  className="px-5 py-2.5 bg-gray-900 dark:bg-primary text-white rounded-xl text-xs font-black shadow-lg hover:-translate-y-0.5 transition-transform"
+                  className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center rounded-[32px] font-black text-[10px] uppercase tracking-widest transition-all backdrop-blur-sm cursor-pointer"
                 >
-                  {t('dashboard.change_avatar')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { if (window.confirm("Êtes-vous sûr de vouloir supprimer votre compte ?")) alert("Action simulée.") }}
-                  className="px-5 py-2.5 bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 border border-red-100 dark:border-red-500/20 rounded-xl text-xs font-black hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
-                >
-                  {t('dashboard.delete')}
+                  <Camera className="w-6 h-6 mb-1" />
+                  Modifier
                 </button>
               </div>
-            </div>
-          </div>
 
-          <form onSubmit={handleUpdateProfile} className="space-y-6 relative z-10">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1">
-                  {t('auth.firstname')}
-                </label>
-                <input
-                  type="text"
-                  value={editForm.firstName}
-                  onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
-                  className="w-full p-4 bg-gray-50 dark:bg-white/5 border border-transparent focus:border-primary/30 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none text-gray-900 dark:text-white transition-all shadow-sm inset-shadow-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1">
-                  {t('auth.lastname')}
-                </label>
-                <input
-                  type="text"
-                  value={editForm.lastName}
-                  onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
-                  className="w-full p-4 bg-gray-50 dark:bg-white/5 border border-transparent focus:border-primary/30 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none text-gray-900 dark:text-white transition-all shadow-sm inset-shadow-sm"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-1">
-                {t('dashboard.email')} <span className="text-gray-300 ml-2 font-normal lowercase">(Non modifiable)</span>
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="email"
-                  value={editForm.email}
-                  disabled
-                  className="w-full p-4 pl-12 bg-gray-100/50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl text-sm font-bold text-gray-400 cursor-not-allowed opacity-70"
-                />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                  <Shield className="w-4 h-4 text-green-500/50" />
+              <div className="flex-1 text-center sm:text-left">
+                <h4 className="font-black text-gray-900 dark:text-white text-2xl mb-1">{user?.firstName} {user?.lastName}</h4>
+                <p className="text-sm text-gray-500 dark:text-gray-400 font-bold mb-6">{user?.email}</p>
+                <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="px-6 py-3 bg-primary text-white rounded-2xl text-xs font-black shadow-xl shadow-primary/20 hover:-translate-y-1 transition-all"
+                  >
+                    {t('dashboard.change_avatar')}
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div className="pt-4 flex justify-end">
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="btn-primary py-4 px-10 rounded-xl font-black flex items-center gap-3 disabled:opacity-70 shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all"
-              >
-                {isSaving ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Enregistrement...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-5 h-5" />
-                    {t('dashboard.save')}
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8 border-t border-gray-50 dark:border-white/10">
-        <div className="md:col-span-1 space-y-4">
-          <h3 className="text-xl font-black text-gray-900 dark:text-white">{t('dashboard.subscription')}</h3>
-          <p className="text-sm text-gray-400 font-medium">
-            {t('dashboard.subscription_desc')}
-          </p>
-        </div>
-        <div className="md:col-span-2 space-y-4">
-          <div className="p-8 bg-linear-to-br from-gray-900 to-black rounded-[32px] text-white relative overflow-hidden">
-            <Star className="absolute -right-4 -top-4 w-24 h-24 opacity-10 fill-white" />
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <span className="px-3 py-1 bg-primary text-white text-[10px] font-black rounded-lg uppercase tracking-tight">
-                  {t('dashboard.active')}
-                </span>
-                <h4 className="text-2xl font-black mt-2">{t('dashboard.premium_plan_name')}</h4>
+            <form onSubmit={handleUpdateProfile} className="space-y-6 relative z-10 mt-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-4">
+                    {t('auth.firstname')}
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.firstName}
+                    onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                    className="w-full p-5 bg-gray-50 dark:bg-white/5 border border-transparent focus:border-primary/30 rounded-3xl text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none text-gray-900 dark:text-white transition-all shadow-sm"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-4">
+                    {t('auth.lastname')}
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.lastName}
+                    onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                    className="w-full p-5 bg-gray-50 dark:bg-white/5 border border-transparent focus:border-primary/30 rounded-3xl text-sm font-bold focus:ring-4 focus:ring-primary/10 outline-none text-gray-900 dark:text-white transition-all shadow-sm"
+                  />
+                </div>
               </div>
-              <CreditCard className="w-10 h-10 text-primary" />
+              <div className="flex justify-end pt-4">
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="px-10 py-5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl hover:-translate-y-1 transition-all disabled:opacity-50"
+                >
+                  {isSaving ? 'Enregistrement...' : t('dashboard.save')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        {/* Subscription Side Card */}
+        <div className="lg:col-span-4 bg-gray-900 dark:bg-white/5 p-8 rounded-[40px] text-white overflow-hidden relative group flex flex-col justify-between">
+          <div className="absolute -right-12 -top-12 w-48 h-48 bg-primary/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
+          
+          <div className="relative z-10">
+            <div className="flex justify-between items-start mb-10">
+              <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center">
+                <Star className="w-8 h-8 text-primary shadow-[0_0_20px_rgba(255,255,255,0.3)]" />
+              </div>
+              <div className="px-3 py-1 bg-primary text-white text-[10px] font-black rounded-lg uppercase tracking-tight">
+                {t('dashboard.active')}
+              </div>
             </div>
-            <p className="text-gray-400 text-sm font-medium mb-8">
+            
+            <h4 className="text-3xl font-black mb-2 tracking-tight">{t('dashboard.premium_plan_name')}</h4>
+            <p className="text-gray-400 text-sm font-bold leading-relaxed mb-8">
               {t('dashboard.unlimited')}
             </p>
-            <div className="flex items-center gap-4">
-              <button className="px-6 py-3 bg-white dark:bg-primary text-gray-900 dark:text-white rounded-xl text-sm font-black hover:bg-gray-100 dark:hover:bg-primary/90 transition-all">
-                {t('dashboard.manage_sub')}
-              </button>
-              <span className="text-xs text-gray-500 dark:text-gray-400 font-bold">
-                {t('dashboard.next_payment')}
-              </span>
-            </div>
           </div>
-          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-center gap-4 text-amber-800">
-            <Bell className="w-5 h-5" />
-            <p className="text-xs font-bold">
-              {t('dashboard.auto_renew')}
-            </p>
+
+          <div className="relative z-10 space-y-6">
+            <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex items-center gap-4">
+              <CreditCard className="w-6 h-6 text-primary" />
+              <div>
+                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Facturation</div>
+                <div className="text-sm font-bold">Carte Bancaire •••• 4242</div>
+              </div>
+            </div>
+            
+            <button className="w-full py-5 bg-white text-gray-900 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl hover:bg-gray-100 transition-all active:scale-95">
+              {t('dashboard.manage_sub')}
+            </button>
+            
+            <div className="flex items-center justify-between px-2 text-[10px] font-black uppercase tracking-widest text-gray-500">
+              <span>{t('dashboard.next_payment')}</span>
+              <span className="text-white">Mars 2026</span>
+            </div>
           </div>
         </div>
       </div>
     </motion.div>
   );
 
+  const [isCollapsed, setIsCollapsed] = useState(localStorage.getItem('sidebarCollapsed') === 'true');
+
+  const handleToggleSidebar = (val) => {
+    setIsCollapsed(val);
+    localStorage.setItem('sidebarCollapsed', val);
+  };
+
   return (
     <div className="min-h-screen dashboard-bg flex transition-all duration-300 font-outfit">
-      <SideMenu isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      <SideMenu isCollapsed={isCollapsed} setIsCollapsed={handleToggleSidebar} />
 
       <main
-        className={`flex-1 transition-all duration-300 p-4 md:p-8 ml-0 ${isCollapsed ? "lg:ml-20" : "lg:ml-[280px]"}`}
+        className={`flex-1 flex flex-col transition-all duration-300 p-4 md:p-8 ml-0 pt-32 ${isCollapsed ? "lg:ml-[80px]" : "lg:ml-[280px]"}`}
       >
-        {/* Dashboard Header - Unified without tabs */}
-        <div className="mb-12">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-          >
-            <div className="flex items-center gap-2 text-primary font-bold text-sm mb-3">
-              <Sparkles className="w-4 h-4 animate-pulse" />
-              <span className="uppercase tracking-[0.2em] text-[10px]">
-                {t('dashboard.brand_experience')}
-              </span>
-            </div>
-            <h1 className="text-5xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
-              {activeTab === "overview"
-                ? `${t('dashboard.greeting')} ${user?.firstName}`
-                : activeTab === "templates"
-                  ? t('dashboard.tab_templates')
-                  : activeTab === "history"
-                    ? t('dashboard.tab_history')
-                    : t('dashboard.tab_settings')}
-            </h1>
-            <p className="text-gray-500 dark:text-gray-400 font-medium mt-2">
-              {activeTab === "overview"
-                ? t('dashboard.tab_desc_overview')
-                : activeTab === "templates"
-                  ? t('dashboard.tab_desc_templates')
-                  : activeTab === "history"
-                    ? t('dashboard.tab_desc_history')
-                    : t('dashboard.tab_desc_settings')}
-            </p>
-          </motion.div>
-        </div>
+        <TopBar isCollapsed={isCollapsed} />
+        <div className="mt-8">
+          {/* Dashboard Header - Unified without tabs */}
+          <div className="mb-12">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              <div className="flex items-center gap-2 text-primary font-bold text-sm mb-3">
+                <Sparkles className="w-4 h-4 animate-pulse" />
+                <span className="uppercase tracking-[0.2em] text-[10px]">
+                  {t('dashboard.brand_experience')}
+                </span>
+              </div>
+              <h1 className="text-5xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
+                {activeTab === "overview"
+                  ? `${t('dashboard.greeting')} ${user?.firstName}`
+                  : activeTab === "templates"
+                    ? t('dashboard.tab_templates')
+                    : activeTab === "history"
+                      ? t('dashboard.tab_history')
+                      : t('dashboard.tab_settings')}
+              </h1>
+              <p className="text-gray-500 dark:text-gray-400 font-medium mt-2">
+                {activeTab === "overview"
+                  ? t('dashboard.tab_desc_overview')
+                  : activeTab === "templates"
+                    ? t('dashboard.tab_desc_templates')
+                    : activeTab === "history"
+                      ? t('dashboard.tab_desc_history')
+                      : t('dashboard.tab_desc_settings')}
+              </p>
+            </motion.div>
+          </div>
 
-        <AnimatePresence mode="wait">
-          {activeTab === "overview" && renderOverview()}
-          {activeTab === "templates" && renderTemplates()}
-          {activeTab === "history" && renderHistory()}
-          {activeTab === "settings" && renderSettings()}
-        </AnimatePresence>
+          <AnimatePresence mode="wait">
+            {activeTab === "overview" && renderOverview()}
+            {activeTab === "templates" && renderTemplates()}
+            {activeTab === "history" && renderHistory()}
+            {activeTab === "settings" && renderSettings()}
+          </AnimatePresence>
+        </div>
       </main>
 
 
       {/* Template Customization Modal */}
-      
+
     </div>
   );
 };

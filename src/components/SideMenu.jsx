@@ -6,22 +6,18 @@ import {
     History,
     FileStack,
     Settings,
-    LogOut,
     ShieldCheck,
-    User,
     MessageSquare,
-    Star,
     ChevronLeft,
     ChevronRight,
     Menu,
     X,
     Printer,
-    CreditCard
+    CreditCard,
+    LogOut
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import ThemeToggle from './ThemeToggle';
-import LanguageSelector from './LanguageSelector';
 
 const SideMenu = ({ isCollapsed, setIsCollapsed }) => {
     const { t } = useTranslation();
@@ -45,7 +41,7 @@ const SideMenu = ({ isCollapsed, setIsCollapsed }) => {
     const NavContent = ({ isMobile = false }) => (
         <>
             {/* Logo Section */}
-            <div className={`p-6 border-b border-gray-100 dark:border-white/10 ${isMobile ? 'flex justify-between items-center' : ''}`}>
+            <div className={`${isCollapsed && !isMobile ? 'p-4' : 'p-6'} border-b border-gray-100 dark:border-white/10 ${isMobile ? 'flex justify-between items-center' : ''}`}>
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-linear-to-br from-primary to-accent rounded-xl flex items-center justify-center text-white font-black text-xl shrink-0 shadow-lg shadow-primary/20">
                         N
@@ -64,7 +60,7 @@ const SideMenu = ({ isCollapsed, setIsCollapsed }) => {
             </div>
 
             {/* Menu Items */}
-            <div className="flex-1 p-4 flex flex-col gap-1 overflow-y-auto">
+            <div className="flex-1 p-4 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
                 {menuItems.map((item) => (
                     <NavLink
                         key={item.path}
@@ -90,50 +86,30 @@ const SideMenu = ({ isCollapsed, setIsCollapsed }) => {
                 ))}
             </div>
 
-            {/* User & Premium Section */}
-            <div className="p-4 border-t border-gray-100 dark:border-white/10 space-y-4">
-                {(!isCollapsed || isMobile) ? (
-                    <div>
-                        <div className="p-4 bg-gray-50/50 dark:bg-white/5 rounded-2xl flex items-center gap-3 border border-gray-100 dark:border-white/5">
-                            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden shrink-0">
-                                {user?.avatar ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-primary" />}
-                            </div>
-                            <div className="flex-1 overflow-hidden">
-                                <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{user?.firstName} {user?.lastName}</p>
-                                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
-                            </div>
-                        </div>
 
-                        <div className="mt-4 p-5 bg-linear-to-br from-primary to-accent rounded-2xl text-white relative overflow-hidden group cursor-pointer shadow-lg shadow-primary/20">
-                            <Star className="absolute -right-2 -top-2 w-12 h-12 opacity-20 group-hover:scale-125 transition-transform fill-white" />
-                            <p className="text-[10px] font-bold mb-1 uppercase tracking-widest opacity-80">{t('sidemenu.status')}</p>
-                            <p className="text-sm font-black">{t('sidemenu.premium')}</p>
-                        </div>
+            {/* Logout Section */}
+            <div className="p-4 border-t border-gray-100 dark:border-white/10 mt-auto">
+                <button
+                    onClick={logout}
+                    className={`
+                        w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all group
+                        text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500
+                    `}
+                >
+                    <div className="shrink-0">
+                        <LogOut className="w-5 h-5 transition-colors group-hover:text-red-500" />
                     </div>
-                ) : (
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden cursor-pointer hover:ring-2 ring-primary/20 transition-all">
-                            {user?.avatar ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-primary" />}
+                    {(!isCollapsed || isMobile) && (
+                        <span className="whitespace-nowrap transition-opacity duration-300">
+                            {t('sidemenu.logout')}
+                        </span>
+                    )}
+                    {(isCollapsed && !isMobile) && (
+                        <div className="absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 font-medium border border-white/10 shadow-xl">
+                            {t('sidemenu.logout')}
                         </div>
-                        <div className="w-10 h-10 bg-linear-to-br from-primary to-accent rounded-xl flex items-center justify-center text-white cursor-pointer hover:scale-105 transition-transform shadow-lg shadow-primary/20">
-                            <Star className="w-5 h-5" />
-                        </div>
-                    </div>
-                )}
-
-                <div className="flex items-center justify-between gap-4">
-                    <button
-                        onClick={logout}
-                        className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all ${isCollapsed && !isMobile ? 'justify-center' : ''}`}
-                    >
-                        <LogOut className="w-5 h-5 shrink-0" />
-                        {(!isCollapsed || isMobile) && <span>{t('sidemenu.logout')}</span>}
-                    </button>
-                    <div className="flex items-center justify-between gap-2">
-                        <LanguageSelector direction="up" />
-                        {(!isCollapsed || isMobile) && <ThemeToggle />}
-                    </div>
-                </div>
+                    )}
+                </button>
             </div>
         </>
     );
@@ -159,14 +135,14 @@ const SideMenu = ({ isCollapsed, setIsCollapsed }) => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setIsMobileOpen(false)}
-                            className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[100] lg:hidden"
+                            className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-100 lg:hidden"
                         />
                         <motion.div
                             initial={{ x: '100%' }}
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="fixed right-0 top-0 h-full w-[280px] bg-white dark:bg-slate-900 z-[101] flex flex-col shadow-2xl lg:hidden"
+                            className="fixed right-0 top-0 h-full w-[280px] bg-white dark:bg-slate-900 z-101 flex flex-col shadow-2xl lg:hidden"
                         >
                             <NavContent isMobile />
                         </motion.div>

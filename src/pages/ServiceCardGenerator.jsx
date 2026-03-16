@@ -19,10 +19,16 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import SideMenu from '../components/SideMenu';
+import TopBar from '../components/TopBar';
 
 const ServiceCardGenerator = () => {
     const { t } = useTranslation();
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(localStorage.getItem('sidebarCollapsed') === 'true');
+
+    const handleToggleSidebar = (val) => {
+        setIsCollapsed(val);
+        localStorage.setItem('sidebarCollapsed', val);
+    };
 
     // States - Entries (People)
     const [entries, setEntries] = useState([
@@ -239,10 +245,11 @@ const ServiceCardGenerator = () => {
 
     return (
         <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 flex transition-colors duration-300 font-outfit">
-            <SideMenu isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+            <SideMenu isCollapsed={isCollapsed} setIsCollapsed={handleToggleSidebar} />
 
-            <main className={`flex-1 transition-all duration-300 p-4 md:p-8 ml-0 ${isCollapsed ? "lg:ml-20" : "lg:ml-[280px]"}`}>
-                <div className="max-w-7xl mx-auto">
+            <main className={`flex-1 flex flex-col transition-all duration-300 p-4 md:p-8 ml-0 pt-32 ${isCollapsed ? "lg:ml-[80px]" : "lg:ml-[280px]"}`}>
+                <TopBar isCollapsed={isCollapsed} />
+                <div className="mt-8 max-w-7xl mx-auto">
                     <div className="mb-12">
                         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
                             <div className="flex items-center gap-2 text-primary font-bold text-sm mb-3">
