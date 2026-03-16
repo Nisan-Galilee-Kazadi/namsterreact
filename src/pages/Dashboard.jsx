@@ -313,23 +313,6 @@ const Dashboard = () => {
     },
   ];
 
-  const fonts = [
-    "Alex Brush",
-    "Great Vibes",
-    "Dancing Script",
-    "Playfair Display",
-    "Cinzel",
-    "Outfit",
-    "Montserrat",
-    "Lato",
-    "Lora",
-    "Cormorant Garamond",
-    "Rochester",
-    "Sacramento",
-    "Pinyon Script",
-    "Bodoni Moda"
-  ];
-
   useEffect(() => {
     if (selectedTemplate && canvasRef.current) {
       renderCanvas();

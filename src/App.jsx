@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import Features from './pages/Features';
@@ -12,6 +12,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Demo from './pages/Demo';
 import TemplateCustomizer from './pages/TemplateCustomizer';
+import BadgeGenerator from './pages/BadgeGenerator';
+import ServiceCardGenerator from './pages/ServiceCardGenerator';
 
 const PrivateRoute = ({ children, adminOnly = false }) => {
   const { user, loading } = useAuth();
@@ -28,6 +30,8 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/features" element={<Features />} />
+        <Route path="/badges" element={<BadgeGenerator />} />
+        <Route path="/services" element={<PrivateRoute><ServiceCardGenerator /></PrivateRoute>} />
         <Route path="/app" element={<AppGenerator />} />
         <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/signup" element={<AuthPage mode="signup" />} />

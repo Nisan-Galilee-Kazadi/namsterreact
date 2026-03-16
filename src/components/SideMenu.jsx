@@ -14,7 +14,9 @@ import {
     ChevronLeft,
     ChevronRight,
     Menu,
-    X
+    X,
+    Printer,
+    CreditCard
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -30,6 +32,8 @@ const SideMenu = ({ isCollapsed, setIsCollapsed }) => {
         { icon: <LayoutDashboard className="w-5 h-5" />, label: t('sidemenu.dashboard'), path: '/dashboard' },
         { icon: <FileStack className="w-5 h-5" />, label: t('sidemenu.templates'), path: '/templates' },
         { icon: <History className="w-5 h-5" />, label: t('sidemenu.history'), path: '/history' },
+        { icon: <Printer className="w-5 h-5" />, label: t('sidemenu.badges'), path: '/badges' },
+        { icon: <CreditCard className="w-5 h-5" />, label: t('sidemenu.services'), path: '/services' },
         { icon: <MessageSquare className="w-5 h-5" />, label: t('sidemenu.feedback'), path: '/feedback' },
         { icon: <Settings className="w-5 h-5" />, label: t('sidemenu.settings'), path: '/settings' },
     ];
@@ -135,58 +139,58 @@ const SideMenu = ({ isCollapsed, setIsCollapsed }) => {
     );
 
     return (
-            <>
-                {/* Mobile Header Toggle */}
-                <div className="lg:hidden fixed top-6 right-6 z-50">
-                    <button
-                        onClick={() => setIsMobileOpen(true)}
-                        className="w-12 h-12 bg-white rounded-2xl shadow-xl flex items-center justify-center text-gray-900 border border-gray-100"
-                    >
-                        <Menu className="w-6 h-6" />
-                    </button>
-                </div>
-
-                {/* Mobile Drawer */}
-                <AnimatePresence>
-                    {isMobileOpen && (
-                        <>
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                onClick={() => setIsMobileOpen(false)}
-                                className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[100] lg:hidden"
-                            />
-                            <motion.div
-                                initial={{ x: '100%' }}
-                                animate={{ x: 0 }}
-                                exit={{ x: '100%' }}
-                                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                                className="fixed right-0 top-0 h-full w-[280px] bg-white dark:bg-slate-900 z-[101] flex flex-col shadow-2xl lg:hidden"
-                            >
-                                <NavContent isMobile />
-                            </motion.div>
-                        </>
-                    )}
-                </AnimatePresence>
-
-                {/* Desktop Sidebar */}
-                <motion.div
-                    initial={false}
-                    animate={{ width: isCollapsed ? 80 : 280 }}
-                    className="h-screen bg-white dark:bg-slate-900 border-r border-gray-100 dark:border-white/10 flex-col fixed left-0 top-0 z-50 shadow-xl shadow-gray-200/50 dark:shadow-none hidden lg:flex"
+        <>
+            {/* Mobile Header Toggle */}
+            <div className="lg:hidden fixed top-6 right-6 z-50">
+                <button
+                    onClick={() => setIsMobileOpen(true)}
+                    className="w-12 h-12 bg-white rounded-2xl shadow-xl flex items-center justify-center text-gray-900 border border-gray-100"
                 >
-                    {/* Toggle Button */}
-                    <button
-                        onClick={() => setIsCollapsed(!isCollapsed)}
-                        className="absolute -right-3 top-10 w-6 h-6 bg-white dark:bg-slate-800 border border-gray-100 dark:border-white/10 rounded-full flex items-center justify-center text-gray-400 hover:text-primary shadow-sm z-50 transition-colors"
-                    >
-                        {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-                    </button>
+                    <Menu className="w-6 h-6" />
+                </button>
+            </div>
 
-                    <NavContent />
-                </motion.div>
-            </>
+            {/* Mobile Drawer */}
+            <AnimatePresence>
+                {isMobileOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsMobileOpen(false)}
+                            className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[100] lg:hidden"
+                        />
+                        <motion.div
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="fixed right-0 top-0 h-full w-[280px] bg-white dark:bg-slate-900 z-[101] flex flex-col shadow-2xl lg:hidden"
+                        >
+                            <NavContent isMobile />
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
+            {/* Desktop Sidebar */}
+            <motion.div
+                initial={false}
+                animate={{ width: isCollapsed ? 80 : 280 }}
+                className="h-screen bg-white dark:bg-slate-900 border-r border-gray-100 dark:border-white/10 flex-col fixed left-0 top-0 z-50 shadow-xl shadow-gray-200/50 dark:shadow-none hidden lg:flex"
+            >
+                {/* Toggle Button */}
+                <button
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    className="absolute -right-3 top-10 w-6 h-6 bg-white dark:bg-slate-800 border border-gray-100 dark:border-white/10 rounded-full flex items-center justify-center text-gray-400 hover:text-primary shadow-sm z-50 transition-colors"
+                >
+                    {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                </button>
+
+                <NavContent />
+            </motion.div>
+        </>
     );
 };
 

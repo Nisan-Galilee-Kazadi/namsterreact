@@ -192,13 +192,15 @@
     "sidemenu": {
         "dashboard": "Tableau de bord",
         "templates": "Templates",
+        "badges": "Badges Express",
         "history": "Historique",
         "feedback": "Feedback",
         "settings": "Paramètres",
         "admin": "Admin Panel",
         "status": "Votre Statut",
         "premium": "Membre Premium",
-        "logout": "Déconnexion"
+        "logout": "Sortir",
+        "services": "Cartes de Services"
     },
     "template_modal": {
         "title": "Personnalisation",

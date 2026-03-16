@@ -192,13 +192,15 @@
     "sidemenu": {
         "dashboard": "Dashboard",
         "templates": "Templates",
+        "badges": "Express Badges",
         "history": "History",
         "feedback": "Feedback",
         "settings": "Settings",
         "admin": "Admin Panel",
         "status": "Your Status",
         "premium": "Premium Member",
-        "logout": "Logout"
+        "logout": "Logout",
+        "services": "Service Cards"
     },
     "template_modal": {
         "title": "Customization",
