@@ -17,6 +17,7 @@ import Button from '../components/Button';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import AlertModal from '../components/AlertModal';
 
 const API_BASE =
     import.meta.env.VITE_API_BASE ||
@@ -45,6 +46,7 @@ const Feedback = () => {
     const [replyText, setReplyText] = useState('');
     const [sendingReply, setSendingReply] = useState(false);
     const [adminSearch, setAdminSearch] = useState('');
+    const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'success' });
 
     const fetchFeedbacks = async () => {
         try {
@@ -111,12 +113,21 @@ const Feedback = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            setSent(true);
             setMessage('');
-            fetchFeedbacks();
+            setAlertConfig({
+                isOpen: true,
+                title: t('feedback_page.message_received'),
+                message: t('feedback_page.thanks_24h'),
+                type: 'success'
+            });
         } catch (err) {
-            setError(t('features.form_error'));
             console.error(err);
+            setAlertConfig({
+                isOpen: true,
+                title: "Erreur",
+                message: t('feedback_page.error_send'),
+                type: 'error'
+            });
         } finally {
             setLoading(false);
         }
@@ -433,6 +444,16 @@ const Feedback = () => {
                     {user?.role === 'admin' ? renderAdminView() : renderUserView()}
                 </div>
             </main>
+
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig({ ...alertConfig, isOpen: false })}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+                onConfirm={alertConfig.onConfirm}
+                showCancelButton={alertConfig.showCancelButton}
+            />
         </div>
     );
 };

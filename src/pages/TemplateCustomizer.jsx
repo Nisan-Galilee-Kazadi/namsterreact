@@ -8,6 +8,7 @@ import { templates, fonts } from "../data/templates";
 import SideMenu from "../components/SideMenu";
 import { useAuth } from "../context/AuthContext";
 import { API_URL } from "../api";
+import AlertModal from "../components/AlertModal";
 
 const TemplateCustomizer = () => {
   const { id } = useParams();
@@ -23,6 +24,7 @@ const TemplateCustomizer = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('text'); // 'text', 'background', 'typography'
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'success' });
   const [saveName, setSaveName] = useState("");
   const [saveLoading, setSaveLoading] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
@@ -328,9 +330,20 @@ const TemplateCustomizer = () => {
       });
       setShowSaveModal(false);
       setSaveName("");
+      setAlertConfig({
+        isOpen: true,
+        title: "Sauvegardé !",
+        message: "Votre modèle a été enregistré avec succès.",
+        type: 'success'
+      });
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.error || "Erreur lors de la sauvegarde");
+      setAlertConfig({
+        isOpen: true,
+        title: "Erreur",
+        message: err.response?.data?.error || "Erreur lors de la sauvegarde",
+        type: 'error'
+      });
     } finally {
       setSaveLoading(false);
     }
@@ -392,8 +405,8 @@ const TemplateCustomizer = () => {
     <div className="flex bg-gray-50 dark:bg-slate-900 min-h-screen text-gray-900 dark:text-gray-100">
       <SideMenu isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
 
-      <div className={`flex-1 transition-all duration-300 h-[100dvh] flex flex-col md:flex-row overflow-hidden ${isCollapsed ? 'ml-20 pl-2' : 'ml-64 pl-4'}`}>
-        
+      <div className={`flex-1 transition-all duration-300 h-dvh flex flex-col md:flex-row overflow-hidden ${isCollapsed ? 'ml-20 pl-2' : 'ml-64 pl-4'}`}>
+
         {/* Left Side: Customization Sidebar — reste fixe, ne scroll pas */}
         <div className="w-full md:w-[400px] shrink-0 bg-white dark:bg-white/5 border-r border-gray-200 dark:border-white/10 flex flex-col min-h-0 md:min-h-0 h-full">
           <div className="p-6 border-b border-gray-100 dark:border-white/10 flex items-center justify-between shadow-sm sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl z-20">
@@ -499,7 +512,7 @@ const TemplateCustomizer = () => {
           </div>
 
           <div className="p-6 overflow-y-auto flex-1 space-y-6">
-            
+
             {activeTab === 'text' && (
               <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
                 <div className="space-y-1">
@@ -608,7 +621,7 @@ const TemplateCustomizer = () => {
 
                 <div className="space-y-4">
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Palette de couleurs</label>
-                  
+
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-white/10">
                     <span className="text-xs font-bold text-gray-600 dark:text-gray-300">Texte</span>
                     <input type="color" className="w-8 h-8 rounded shrink-0 cursor-pointer border-none bg-transparent" value={customizationData.textColor} onChange={(e) => setCustomizationData({ ...customizationData, textColor: e.target.value })} />
@@ -637,7 +650,7 @@ const TemplateCustomizer = () => {
           <div className="w-full max-w-xl mx-auto flex items-center justify-between mb-4 px-2 sm:px-4">
             <h1 className="text-lg sm:text-xl font-black text-gray-800 dark:text-white capitalize">Espace de Travail</h1>
             <div className="flex gap-2 sm:gap-3 items-center">
-              <button 
+              <button
                 onClick={handleFinalizeTemplate}
                 className="btn-primary py-2 px-4 sm:py-2.5 sm:px-6 rounded-xl font-black text-xs sm:text-sm flex items-center gap-2"
               >
@@ -647,7 +660,7 @@ const TemplateCustomizer = () => {
               </button>
             </div>
           </div>
-          
+
           <div className="flex-1 w-full max-w-xl mx-auto flex items-center justify-center min-h-0 bg-transparent rounded-3xl p-2 sm:p-4 overflow-hidden shadow-inner">
             <canvas
               ref={canvasRef}
@@ -655,12 +668,20 @@ const TemplateCustomizer = () => {
               style={{ objectFit: 'contain', aspectRatio: isPortrait ? '2/3' : '16/9', width: '100%', height: 'auto', maxHeight: '100%' }}
             />
           </div>
-          
+
           <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-4">
             Prévisualisation • {canvasWidth}×{canvasHeight}
           </p>
         </div>
       </div>
+
+      <AlertModal
+        isOpen={alertConfig.isOpen}
+        onClose={() => setAlertConfig({ ...alertConfig, isOpen: false })}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+      />
     </div>
   );
 };

@@ -33,6 +33,8 @@ import TopBar from "../components/TopBar";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { templates } from "../data/templates";
+import SubscriptionModal from "../components/SubscriptionModal";
+import AlertModal from "../components/AlertModal";
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -43,6 +45,8 @@ const Dashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [savedTemplates, setSavedTemplates] = useState([]);
+  const [isSubModalOpen, setIsSubModalOpen] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'success' });
   const [favoriteLoadingId, setFavoriteLoadingId] = useState(null);
   const [visibleAdvanced, setVisibleAdvanced] = useState({
     title: false,
@@ -129,15 +133,27 @@ const Dashboard = () => {
     setIsSaving(true);
     try {
       const token = localStorage.getItem('token');
-      const headers = { 
+      const headers = {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'multipart/form-data'
       };
       await axios.put(`${API_BASE}/api/user/profile/avatar`, formData, { headers });
       await fetchDashboardData();
       if (typeof refreshUser === 'function') await refreshUser();
+      setAlertConfig({
+        isOpen: true,
+        title: "Profil mis à jour",
+        message: t('dashboard.profile_updated_success'),
+        type: 'success'
+      });
     } catch (err) {
       console.error("Failed to upload avatar:", err);
+      setAlertConfig({
+        isOpen: true,
+        title: "Erreur",
+        message: t('dashboard.profile_updated_error'),
+        type: 'error'
+      });
     } finally {
       setIsSaving(false);
     }
@@ -152,10 +168,20 @@ const Dashboard = () => {
       await axios.put(`${API_BASE}/api/auth/profile`, editForm, { headers });
       await fetchDashboardData();
       if (typeof refreshUser === 'function') await refreshUser();
-      alert(t('dashboard.profile_updated_success'));
+      setAlertConfig({
+        isOpen: true,
+        title: "Succès",
+        message: t('dashboard.profile_updated_success'),
+        type: 'success'
+      });
     } catch (err) {
       console.error("Failed to update profile:", err);
-      alert(t('dashboard.profile_updated_error'));
+      setAlertConfig({
+        isOpen: true,
+        title: "Erreur",
+        message: t('dashboard.profile_updated_error'),
+        type: 'error'
+      });
     } finally {
       setIsSaving(false);
     }
@@ -1210,6 +1236,13 @@ const Dashboard = () => {
             </div>
 
             <form onSubmit={handleUpdateProfile} className="space-y-6 relative z-10 mt-8">
+              <input
+                type="file"
+                ref={avatarInputRef}
+                onChange={handleAvatarChange}
+                accept="image/*"
+                className="hidden"
+              />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-4">
@@ -1250,7 +1283,7 @@ const Dashboard = () => {
         {/* Subscription Side Card */}
         <div className="lg:col-span-4 bg-gray-900 dark:bg-white/5 p-8 rounded-[40px] text-white overflow-hidden relative group flex flex-col justify-between">
           <div className="absolute -right-12 -top-12 w-48 h-48 bg-primary/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
-          
+
           <div className="relative z-10">
             <div className="flex justify-between items-start mb-10">
               <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center">
@@ -1260,7 +1293,7 @@ const Dashboard = () => {
                 {t('dashboard.active')}
               </div>
             </div>
-            
+
             <h4 className="text-3xl font-black mb-2 tracking-tight">{t('dashboard.premium_plan_name')}</h4>
             <p className="text-gray-400 text-sm font-bold leading-relaxed mb-8">
               {t('dashboard.unlimited')}
@@ -1275,11 +1308,14 @@ const Dashboard = () => {
                 <div className="text-sm font-bold">Carte Bancaire •••• 4242</div>
               </div>
             </div>
-            
-            <button className="w-full py-5 bg-white text-gray-900 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl hover:bg-gray-100 transition-all active:scale-95">
+
+            <button
+              onClick={() => setIsSubModalOpen(true)}
+              className="w-full py-5 bg-white text-gray-900 rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl hover:bg-gray-100 transition-all active:scale-95"
+            >
               {t('dashboard.manage_sub')}
             </button>
-            
+
             <div className="flex items-center justify-between px-2 text-[10px] font-black uppercase tracking-widest text-gray-500">
               <span>{t('dashboard.next_payment')}</span>
               <span className="text-white">Mars 2026</span>
@@ -1351,6 +1387,16 @@ const Dashboard = () => {
 
       {/* Template Customization Modal */}
 
+      <SubscriptionModal
+        isOpen={isSubModalOpen}
+        onClose={() => setIsSubModalOpen(false)}
+        currentPlan={user?.isPremium ? 'premium' : 'free'}
+      />
+
+      <AlertModal
+        {...alertConfig}
+        onClose={() => setAlertConfig({ ...alertConfig, isOpen: false })}
+      />
     </div>
   );
 };

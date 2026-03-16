@@ -30,29 +30,13 @@ import SideMenu from '../components/SideMenu';
 import TopBar from '../components/TopBar';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import Swal from 'sweetalert2';
+import AlertModal from '../components/AlertModal';
 
 const API_BASE =
     import.meta.env.VITE_API_BASE ||
     (import.meta.env.PROD
         ? 'https://namsterbackend-3.onrender.com'
         : 'http://localhost:3001');
-
-const swalConfig = {
-    customClass: {
-        popup: 'dark:bg-slate-900 dark:text-white rounded-3xl border border-white/10',
-        title: 'text-2xl font-black tracking-tight',
-        confirmButton: 'bg-primary hover:bg-primary/90 px-8 py-3 rounded-xl font-bold transition-all',
-        cancelButton: 'bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 px-8 py-3 rounded-xl font-bold transition-all text-gray-900 dark:text-white'
-    },
-    buttonsStyling: false,
-    showClass: {
-        popup: 'animate-[scale-in_0.3s_ease-out]'
-    },
-    hideClass: {
-        popup: 'animate-[scale-out_0.2s_ease-in]'
-    }
-};
 
 const AdminDashboard = () => {
     const { user } = useAuth();
@@ -72,6 +56,7 @@ const AdminDashboard = () => {
     const [replyingTo, setReplyingTo] = useState(null);
     const [replyText, setReplyText] = useState('');
     const [sendingReply, setSendingReply] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'success' });
 
     // Edit User States
     const [editingUser, setEditingUser] = useState(null);
@@ -107,28 +92,37 @@ const AdminDashboard = () => {
     }, []);
 
     const handleDeleteUser = async (userId) => {
-        const result = await Swal.fire({
-            ...swalConfig,
+        setAlertConfig({
+            isOpen: true,
             title: 'Supprimer cet utilisateur ?',
-            text: "Cette action est irréversible !",
-            icon: 'warning',
+            message: "Cette action est irréversible !",
+            type: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Oui, supprimer',
-            cancelButtonText: 'Annuler'
-        });
-
-        if (result.isConfirmed) {
-            try {
-                const token = localStorage.getItem('token');
-                await axios.delete(`${API_BASE}/api/admin/users/${userId}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                Swal.fire({ ...swalConfig, icon: 'success', title: 'Supprimé !' });
-                fetchData();
-            } catch (error) {
-                Swal.fire({ ...swalConfig, icon: 'error', title: 'Erreur', text: 'Impossible de supprimer l\'utilisateur' });
+            confirmText: 'Oui, supprimer',
+            cancelText: 'Annuler',
+            onConfirm: async () => {
+                try {
+                    const token = localStorage.getItem('token');
+                    await axios.delete(`${API_BASE}/api/admin/users/${userId}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    setAlertConfig({
+                        isOpen: true,
+                        title: 'Supprimé !',
+                        message: 'L\'utilisateur a été supprimé avec succès.',
+                        type: 'success'
+                    });
+                    fetchData();
+                } catch (error) {
+                    setAlertConfig({
+                        isOpen: true,
+                        title: 'Erreur',
+                        message: 'Impossible de supprimer l\'utilisateur',
+                        type: 'error'
+                    });
+                }
             }
-        }
+        });
     };
 
     const handleEditClick = (userToEdit) => {
@@ -149,11 +143,21 @@ const AdminDashboard = () => {
             await axios.put(`${API_BASE}/api/admin/users/${editingUser._id}`, editForm, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            Swal.fire({ ...swalConfig, icon: 'success', title: 'Mis à jour !', timer: 1500, showConfirmButton: false });
+            setAlertConfig({
+                isOpen: true,
+                title: 'Mis à jour !',
+                message: 'Le compte a été modifié avec succès.',
+                type: 'success'
+            });
             setEditingUser(null);
             fetchData();
         } catch (error) {
-            Swal.fire({ ...swalConfig, icon: 'error', title: 'Erreur', text: error.response?.data?.message || 'Erreur lors de la mise à jour' });
+            setAlertConfig({
+                isOpen: true,
+                title: 'Erreur',
+                message: error.response?.data?.message || 'Erreur lors de la mise à jour',
+                type: 'error'
+            });
         } finally {
             setIsSubmittingEdit(false);
         }
@@ -167,12 +171,22 @@ const AdminDashboard = () => {
             await axios.post(`${API_BASE}/api/admin/feedbacks/${replyingTo._id}/reply`, { reply: replyText }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            Swal.fire({ ...swalConfig, icon: 'success', title: 'Réponse envoyée !', timer: 1500, showConfirmButton: false });
+            setAlertConfig({
+                isOpen: true,
+                title: 'Réponse envoyée !',
+                message: 'Votre réponse a été transmise à l\'utilisateur.',
+                type: 'success'
+            });
             setReplyingTo(null);
             setReplyText('');
             fetchData();
         } catch (error) {
-            Swal.fire({ ...swalConfig, icon: 'error', title: 'Erreur', text: 'Impossible d\'envoyer la réponse' });
+            setAlertConfig({
+                isOpen: true,
+                title: 'Erreur',
+                message: 'Impossible d\'envoyer la réponse',
+                type: 'error'
+            });
         } finally {
             setSendingReply(false);
         }
@@ -603,6 +617,19 @@ const AdminDashboard = () => {
                     </div>
                 )}
             </AnimatePresence>
+
+            <AlertModal
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig({ ...alertConfig, isOpen: false })}
+                onConfirm={alertConfig.onConfirm}
+                onCancel={alertConfig.onCancel}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+                confirmText={alertConfig.confirmText}
+                cancelText={alertConfig.cancelText}
+                showCancelButton={alertConfig.showCancelButton}
+            />
         </div>
     );
 };
